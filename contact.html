@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Contact Us | Medcare</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <style>
     body {
       font-family: 'Poppins', sans-serif;
@@ -131,17 +132,20 @@
   <!-- header section start  -->
 <header class="header">
 
-    <a href="#" class="logo"><i class="fa-solid fa-heart-pulse"></i> medcare.</a>
+    <a href="index.html" class="logo"><i class="fa-solid fa-heart-pulse"></i> medcare.</a>
 
  
     <nav class="navbar">
-     <a href="#home">home</a>
-     <a href="#services">services</a>
-     <a href="#about">about</a>
-     <a href="#doctors">doctors</a>
-     <a href="#book">book</a>
-     <a href="#review">review</a>
-     <a href="#blogs">blogs</a>
+     <a href="index.html#home">home</a>
+     <a href="index.html#services">services</a>
+     <a href="index.html#about">about</a>
+     <a href="index.html#doctors">doctors</a>
+     <a href="index.html#book">book</a>
+     <a href="index.html#review">review</a>
+     <a href="index.html#blogs">blogs</a>
+     <a href="appointments.html">my appointments</a>
+     <a href="admin.html">admin</a>
+     <a href="login.html">login</a>
     </nav>
  
     <div id="menu-btn" class="fas fa-bars"></div>
@@ -162,7 +166,17 @@
   </section>
 
   <script>
-    document.getElementById("contactForm").addEventListener("submit", function(e) {
+    async function fetchJson(url, opts) {
+      const res = await fetch(url, Object.assign({ headers: { "Content-Type": "application/json" } }, opts));
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json || !json.ok) {
+        const msg = (json && json.error) ? json.error : ("Request failed (" + res.status + ")");
+        throw new Error(msg);
+      }
+      return json.data;
+    }
+
+    document.getElementById("contactForm").addEventListener("submit", async function(e) {
       e.preventDefault();
       const name = document.getElementById("name").value.trim();
       const email = document.getElementById("email").value.trim();
@@ -179,8 +193,16 @@
         return;
       }
 
-      document.getElementById("successMsg").style.display = "block";
-      this.reset();
+      try {
+        await fetchJson("/api/contact", {
+          method: "POST",
+          body: JSON.stringify({ name, email, phone, message })
+        });
+        document.getElementById("successMsg").style.display = "block";
+        this.reset();
+      } catch (err) {
+        alert(err && err.message ? err.message : "Failed to send message");
+      }
     });
   </script>
 </body>

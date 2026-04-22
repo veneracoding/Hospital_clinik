@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation | Medcare</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    body { background:#f9f9f9; }
+    .wrap { max-width: 1100px; margin: 100px auto 50px; padding: 0 20px; }
+    .doc-card {
+      background:#fff;
+      border-radius: 16px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+      padding: 22px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(0,0,0,0.04);
+    }
+    .doc-card h2 { font-size: 2.4rem; margin-bottom: 10px; color: var(--black); }
+    .doc-card p { font-size: 1.6rem; color: var(--light-color); line-height: 1.6; }
+    .doc-list { margin-top: 10px; display:grid; gap: 10px; }
+    .doc-item {
+      display:flex; gap: 10px; align-items:flex-start;
+      padding: 12px; border-radius: 14px;
+      background:#f7fffd; border: 1px solid rgba(22,160,133,.18);
+    }
+    .doc-item i { color: var(--green); margin-top: 3px; }
+    .doc-item span { font-size: 1.6rem; color: var(--black); line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="index.html" class="logo"><i class="fa-solid fa-heart-pulse"></i> medcare.</a>
+    <nav class="navbar">
+      <a href="index.html#home">home</a>
+      <a href="index.html#services">services</a>
+      <a href="index.html#about">about</a>
+      <a href="index.html#doctors">doctors</a>
+      <a href="index.html#book">book</a>
+      <a href="appointments.html">my appointments</a>
+    </nav>
+    <div id="menu-btn" class="fas fa-bars"></div>
+  </header>
+
+  <div class="wrap">
+    <div class="doc-card" id="services">
+      <h2>Services documentation</h2>
+      <p>Here you can place official information about services, rules, preparation, prices, and FAQ (same style, no extra UI).</p>
+      <div class="doc-list">
+        <div class="doc-item"><i class="fa-solid fa-check"></i><span>How to book: choose doctor → date → time → submit (status becomes pending/waiting).</span></div>
+        <div class="doc-item"><i class="fa-solid fa-check"></i><span>Working hours: 09:00–17:00 (30 min slots). Busy slots disappear automatically.</span></div>
+        <div class="doc-item"><i class="fa-solid fa-check"></i><span>Contact: use Contact page to send questions to the clinic.</span></div>
+      </div>
+    </div>
+
+    <div class="doc-card" id="about">
+      <h2>About documentation</h2>
+      <p>Add clinic history, licenses, policies, and patient rights here.</p>
+    </div>
+
+    <div class="doc-card" id="doctors">
+      <h2>Doctors documentation</h2>
+      <p>For biographies open a doctor card → Learn more (biography page).</p>
+    </div>
+
+    <div class="doc-card" id="blogs">
+      <h2>Blogs documentation</h2>
+      <p>Add article sources, publication rules, disclaimers, and medical content policy here.</p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+

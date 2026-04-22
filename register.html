@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login | Medcare</title>
+  <title>Register | Medcare</title>
   <style>
     body {
       font-family: 'Poppins', sans-serif;
@@ -67,6 +67,13 @@
       display: none;
     }
 
+    .ok {
+      color: #16916f;
+      font-size: 14px;
+      margin-bottom: 10px;
+      display: none;
+    }
+
     .login-container p {
       margin-top: 15px;
       font-size: 14px;
@@ -85,15 +92,16 @@
 </head>
 <body>
   <div class="login-container">
-    <h2>Login</h2>
-    <p id="loginHint" style="display:none;color:#20b486;margin-bottom:15px;">Sign in with an admin account to continue.</p>
-    <form id="loginForm">
-      <div class="error" id="errorMsg">⚠️ Invalid email or password.</div>
+    <h2>Register</h2>
+    <form id="registerForm">
+      <div class="error" id="errorMsg">⚠️ Registration failed.</div>
+      <div class="ok" id="okMsg">✅ Account created. You can login now.</div>
+      <input type="text" id="name" placeholder="Your name" required />
       <input type="email" id="email" placeholder="Enter your email" required />
-      <input type="password" id="password" placeholder="Enter your password" required />
-      <button type="submit">Login</button>
+      <input type="password" id="password" placeholder="Create password (min 6)" required />
+      <button type="submit">Create account</button>
     </form>
-    <p>Don't have an account? <a href="register.html">Register</a></p>
+    <p>Already have an account? <a href="login.html">Login</a></p>
   </div>
 
   <script>
@@ -107,60 +115,30 @@
       return json.data;
     }
 
-    function getParam(name) {
-      const u = new URL(window.location.href);
-      return u.searchParams.get(name);
-    }
-
-    if (getParam("admin") === "1") {
-      document.getElementById("loginHint").style.display = "block";
-    }
-
-    document.getElementById("loginForm").addEventListener("submit", async function(e) {
+    document.getElementById("registerForm").addEventListener("submit", async function(e) {
       e.preventDefault();
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
       const errorMsg = document.getElementById("errorMsg");
-
+      const okMsg = document.getElementById("okMsg");
       errorMsg.style.display = "none";
-
-      if (!email || !password) {
-        alert("Please fill in all fields.");
-        return;
-      }
-
-      if (!/^[^ ]+@[^ ]+\.[a-z]{2,}$/i.test(email)) {
-        errorMsg.textContent = "⚠️ Please enter a valid email address.";
-        errorMsg.style.display = "block";
-        return;
-      }
-
-      if (password.length < 6) {
-        errorMsg.textContent = "⚠️ Password must be at least 6 characters.";
-        errorMsg.style.display = "block";
-        return;
-      }
+      okMsg.style.display = "none";
 
       try {
-        const loginData = await fetchJson("/api/auth/login", {
+        await fetchJson("/api/auth/register", {
           method: "POST",
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({
+            name: document.getElementById("name").value.trim(),
+            email: document.getElementById("email").value.trim(),
+            password: document.getElementById("password").value
+          })
         });
-        const next = getParam("next");
-        if (next) {
-          window.location.href = next;
-          return;
-        }
-        if (loginData && loginData.user && loginData.user.role === "admin") {
-          window.location.href = "admin.html";
-          return;
-        }
-        window.location.href = "appointments.html";
+        okMsg.style.display = "block";
+        this.reset();
       } catch (err) {
-        errorMsg.textContent = "⚠️ " + (err && err.message ? err.message : "Invalid email or password.");
+        errorMsg.textContent = "⚠️ " + (err && err.message ? err.message : "Registration failed");
         errorMsg.style.display = "block";
       }
     });
   </script>
 </body>
 </html>
+
