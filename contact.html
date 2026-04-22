@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Contact Us | Medcare</title>
+  <title>Bog‘lanish | Medcare</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <style>
     body {
       font-family: 'Poppins', sans-serif;
       margin: 0;
-      background-color: #f9f9f9;
+      background-color: var(--bg);
     }
 
     header {
@@ -41,7 +41,7 @@
     right: 0;
     z-index: 1000;
     box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .1);
-    background: #fff;
+    background: var(--surface);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -73,7 +73,7 @@
     .contact-section {
       max-width: 800px;
       margin: 80px auto;
-      background-color: #fff;
+      background-color: var(--surface);
       padding: 40px;
       border-radius: 15px;
       box-shadow: 0 5px 20px rgba(0,0,0,0.1);
@@ -98,6 +98,8 @@
       font-size: 16px;
       width: 100%;
       transition: 0.3s;
+      background: var(--surface);
+      color: var(--text);
     }
 
     .contact-form input:focus, .contact-form textarea:focus {
@@ -136,32 +138,37 @@
 
  
     <nav class="navbar">
-     <a href="index.html#home">home</a>
-     <a href="index.html#services">services</a>
-     <a href="index.html#about">about</a>
-     <a href="index.html#doctors">doctors</a>
-     <a href="index.html#book">book</a>
-     <a href="index.html#review">review</a>
-     <a href="index.html#blogs">blogs</a>
-     <a href="appointments.html">my appointments</a>
+     <a href="index.html#home">bosh sahifa</a>
+     <a href="index.html#services">xizmatlar</a>
+     <a href="index.html#about">biz haqimizda</a>
+     <a href="index.html#doctors">shifokorlar</a>
+     <a href="index.html#book">yozilish</a>
+     <a href="index.html#review">fikrlar</a>
+     <a href="index.html#blogs">bloglar</a>
+     <a href="appointments.html">yozuvlarim</a>
      <a href="admin.html">admin</a>
-     <a href="login.html">login</a>
+     <a href="login.html">kirish</a>
     </nav>
  
-    <div id="menu-btn" class="fas fa-bars"></div>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Qorong‘i mavzu">
+        <span class="theme-toggle__thumb"><i class="fa-regular fa-sun"></i></span>
+      </button>
+      <div id="menu-btn" class="fas fa-bars"></div>
+    </div>
  
  </header>
  <!-- header section end -->
 
   <section class="contact-section">
-    <h2>Contact Us</h2>
+    <h2>Bog‘lanish</h2>
     <form class="contact-form" id="contactForm">
-      <input type="text" id="name" placeholder="Your Name" required />
-      <input type="email" id="email" placeholder="Your Email" required />
-      <input type="tel" id="phone" placeholder="Your Phone" required />
-      <textarea id="message" rows="5" placeholder="Your Message..." required></textarea>
-      <button type="submit">Send Message</button>
-      <div class="success-msg" id="successMsg">✅ Thank you! Your message has been sent successfully.</div>
+      <input type="text" id="name" placeholder="Ism-familiya" required />
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="tel" id="phone" placeholder="Telefon raqam" required />
+      <textarea id="message" rows="5" placeholder="Xabaringiz..." required></textarea>
+      <button type="submit">Xabar yuborish</button>
+      <div class="success-msg" id="successMsg">✅ Rahmat! Xabaringiz muvaffaqiyatli yuborildi.</div>
     </form>
   </section>
 
@@ -170,7 +177,7 @@
       const res = await fetch(url, Object.assign({ headers: { "Content-Type": "application/json" } }, opts));
       const json = await res.json().catch(() => null);
       if (!res.ok || !json || !json.ok) {
-        const msg = (json && json.error) ? json.error : ("Request failed (" + res.status + ")");
+        const msg = (json && json.error) ? json.error : ("So‘rov bajarilmadi (" + res.status + ")");
         throw new Error(msg);
       }
       return json.data;
@@ -184,12 +191,12 @@
       const message = document.getElementById("message").value.trim();
 
       if (!name || !email || !phone || !message) {
-        alert("Please fill in all fields.");
+        alert("Iltimos, barcha maydonlarni to‘ldiring.");
         return;
       }
 
-      if (!/^[^ ]+@[^ ]+\.[a-z]{2,3}$/.test(email)) {
-        alert("Please enter a valid email address.");
+      if (!/^[^ ]+@[^ ]+\.[a-z]{2,}$/i.test(email)) {
+        alert("Iltimos, to‘g‘ri email manzilini kiriting.");
         return;
       }
 
@@ -201,7 +208,7 @@
         document.getElementById("successMsg").style.display = "block";
         this.reset();
       } catch (err) {
-        alert(err && err.message ? err.message : "Failed to send message");
+        alert(err && err.message ? err.message : "Xabar yuborilmadi");
       }
     });
   </script>

@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Register | Medcare</title>
+  <title>Ro‘yxatdan o‘tish | Medcare</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <style>
     body {
       font-family: 'Poppins', sans-serif;
       margin: 0;
-      background: #f0f5f5;
+      background: var(--bg);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -16,7 +17,7 @@
     }
 
     .login-container {
-      background: #fff;
+      background: var(--surface);
       padding: 40px;
       border-radius: 15px;
       box-shadow: 0 5px 20px rgba(0,0,0,0.1);
@@ -37,6 +38,8 @@
       border-radius: 8px;
       font-size: 16px;
       transition: 0.3s;
+      background: var(--surface);
+      color: var(--text);
     }
 
     .login-container input:focus {
@@ -91,17 +94,22 @@
   </style>
 </head>
 <body>
+  <div style="position:fixed;top:18px;right:18px;z-index:1001;">
+    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Qorong‘i mavzu">
+      <span class="theme-toggle__thumb"><i class="fa-regular fa-sun"></i></span>
+    </button>
+  </div>
   <div class="login-container">
-    <h2>Register</h2>
+    <h2>Ro‘yxatdan o‘tish</h2>
     <form id="registerForm">
-      <div class="error" id="errorMsg">⚠️ Registration failed.</div>
-      <div class="ok" id="okMsg">✅ Account created. You can login now.</div>
-      <input type="text" id="name" placeholder="Your name" required />
-      <input type="email" id="email" placeholder="Enter your email" required />
-      <input type="password" id="password" placeholder="Create password (min 6)" required />
-      <button type="submit">Create account</button>
+      <div class="error" id="errorMsg">⚠️ Ro‘yxatdan o‘tish amalga oshmadi.</div>
+      <div class="ok" id="okMsg">✅ Akkaunt yaratildi. Endi kirishingiz mumkin.</div>
+      <input type="text" id="name" placeholder="Ism-familiya" required />
+      <input type="email" id="email" placeholder="Emailingizni kiriting" required />
+      <input type="password" id="password" placeholder="Parol yarating (kamida 6)" required />
+      <button type="submit">Akkaunt yaratish</button>
     </form>
-    <p>Already have an account? <a href="login.html">Login</a></p>
+    <p>Akkauntingiz bormi? <a href="login.html">Kirish</a></p>
   </div>
 
   <script>
@@ -109,7 +117,7 @@
       const res = await fetch(url, Object.assign({ headers: { "Content-Type": "application/json" } }, opts));
       const json = await res.json().catch(() => null);
       if (!res.ok || !json || !json.ok) {
-        const msg = (json && json.error) ? json.error : ("Request failed (" + res.status + ")");
+        const msg = (json && json.error) ? json.error : ("So‘rov bajarilmadi (" + res.status + ")");
         throw new Error(msg);
       }
       return json.data;
@@ -134,7 +142,7 @@
         okMsg.style.display = "block";
         this.reset();
       } catch (err) {
-        errorMsg.textContent = "⚠️ " + (err && err.message ? err.message : "Registration failed");
+        errorMsg.textContent = "⚠️ " + (err && err.message ? err.message : "Ro‘yxatdan o‘tish amalga oshmadi");
         errorMsg.style.display = "block";
       }
     });

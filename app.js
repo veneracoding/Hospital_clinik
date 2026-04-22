@@ -17,12 +17,76 @@ async function fetchJson(url, opts) {
   const res = await fetch(url, opts);
   const json = await res.json().catch(() => null);
   if (!res.ok || !json || !json.ok) {
-    const msg = (json && json.error) ? json.error : ("Request failed (" + res.status + ")");
+    const msg = (json && json.error) ? json.error : ("So‘rov bajarilmadi (" + res.status + ")");
     const e = new Error(msg);
     e.status = res.status;
     throw e;
   }
   return json.data;
+}
+
+const themes = ["light", "dark", "coffee", "blue", "purple", "pink", "orange"];
+const themeIcons = {
+  light: "fa-sun",
+  dark: "fa-moon",
+  coffee: "fa-mug-hot",
+  blue: "fa-water",
+  purple: "fa-wand-magic-sparkles",
+  pink: "fa-heart",
+  orange: "fa-flame"
+};
+
+function initThemeToggle() {
+  const root = document.documentElement;
+  const btn = document.getElementById("themeToggle");
+  const thumb = btn ? btn.querySelector(".theme-toggle__thumb") : null;
+
+  const getPreferred = () => {
+    try {
+      return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    } catch (e) {
+      return "light";
+    }
+  };
+
+  const getSaved = () => {
+    try { return localStorage.getItem("theme"); } catch (e) { return null; }
+  };
+
+  const setTheme = (theme) => {
+    root.removeAttribute("data-theme");
+    if (theme !== "light") root.setAttribute("data-theme", theme);
+    try { localStorage.setItem("theme", theme); } catch (e) {}
+    if (btn) {
+      const icon = themeIcons[theme] || "fa-sun";
+      btn.setAttribute("aria-label", theme + " mavzu");
+      if (thumb) thumb.innerHTML = '<i class="fa-regular ' + icon + '"></i>';
+    }
+  };
+
+  const getCurrent = () => {
+    if (root.hasAttribute("data-theme")) {
+      return root.getAttribute("data-theme");
+    }
+    return "light";
+  };
+
+  const getNext = () => {
+    const current = getCurrent();
+    const idx = themes.indexOf(current);
+    if (idx === -1) return "dark";
+    return themes[(idx + 1) % themes.length];
+  };
+
+  const initial = getSaved() || "light";
+  setTheme(initial);
+
+  if (btn) {
+    btn.addEventListener("click", () => {
+      const nextTheme = getNext();
+      setTheme(nextTheme);
+    });
+  }
 }
 
 async function initBooking() {
@@ -63,7 +127,7 @@ async function initBooking() {
 
   // Load doctors list
   const doctors = await fetchJson("/api/doctors");
-  doctorSel.innerHTML = '<option value="">Choose doctor</option>';
+  doctorSel.innerHTML = '<option value="">Shifokorni tanlang</option>';
   for (const d of doctors) {
     const opt = document.createElement("option");
     opt.value = d.id;
@@ -74,7 +138,7 @@ async function initBooking() {
   async function loadSlots() {
     const doctorId = doctorSel.value;
     const date = dateInp.value;
-    timeSel.innerHTML = '<option value="">Choose time</option>';
+    timeSel.innerHTML = '<option value="">Vaqtni tanlang</option>';
     if (!doctorId || !date) return;
 
     try {
@@ -88,11 +152,11 @@ async function initBooking() {
       if (!data.available.length) {
         const opt = document.createElement("option");
         opt.value = "";
-        opt.textContent = "No slots available";
+        opt.textContent = "Bo‘sh vaqt yo‘q";
         timeSel.appendChild(opt);
       }
     } catch (err) {
-      showResult(err && err.message ? err.message : "Failed to load time slots", "error");
+      showResult(err && err.message ? err.message : "Vaqtlar yuklanmadi", "error");
     }
   }
 
@@ -108,7 +172,7 @@ async function initBooking() {
     const time = timeSel.value;
 
     if (!doctorId || !date || !time) {
-      showResult("Please choose doctor, date and time.", "error");
+      showResult("Iltimos, shifokor, sana va vaqtni tanlang.", "error");
       return;
     }
 
@@ -130,12 +194,12 @@ async function initBooking() {
           reason: reasonInp ? reasonInp.value : ""
         })
       });
-      showResult("✅ Booked! Status: pending (waiting). Go to 'My appointments' to track.", "ok");
+      showResult("✅ Yozildingiz! Holat: kutilmoqda. Kuzatish uchun “Yozuvlarim” sahifasiga o‘ting.", "ok");
       await loadSlots();
       if (data && data.appointment && data.appointment.time) timeSel.value = "";
       if (reasonInp) reasonInp.value = "";
     } catch (err) {
-      showResult("⚠️ " + (err && err.message ? err.message : "Booking failed"), "error");
+      showResult("⚠️ " + (err && err.message ? err.message : "Yozilish amalga oshmadi"), "error");
       await loadSlots();
     }
   });
@@ -170,6 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  initThemeToggle();
   initBooking().catch(() => {});
 });
 

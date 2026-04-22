@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Appointments | Medcare</title>
+  <title>Yozuvlarim | Medcare</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <style>
-    body { background:#f9f9f9; }
+    body { background: var(--bg); }
     .page-wrap { max-width: 1000px; margin: 100px auto 40px; padding: 0 20px; }
     .card {
-      background: #fff;
+      background: var(--surface);
       border-radius: 15px;
       box-shadow: 0 5px 20px rgba(0,0,0,0.08);
       padding: 22px;
@@ -40,30 +40,35 @@
   <header class="header">
     <a href="index.html" class="logo"><i class="fa-solid fa-heart-pulse"></i> medcare.</a>
     <nav class="navbar">
-      <a href="index.html#home">home</a>
-      <a href="index.html#doctors">doctors</a>
-      <a href="index.html#book">book</a>
-      <a href="appointments.html">my appointments</a>
+      <a href="index.html#home">bosh sahifa</a>
+      <a href="index.html#doctors">shifokorlar</a>
+      <a href="index.html#book">yozilish</a>
+      <a href="appointments.html">yozuvlarim</a>
       <a href="admin.html">admin</a>
-      <a href="login.html">login</a>
+      <a href="login.html">kirish</a>
     </nav>
-    <div id="menu-btn" class="fas fa-bars"></div>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Qorong‘i mavzu">
+        <span class="theme-toggle__thumb"><i class="fa-regular fa-sun"></i></span>
+      </button>
+      <div id="menu-btn" class="fas fa-bars"></div>
+    </div>
   </header>
 
   <div class="page-wrap">
     <div class="card">
       <div class="row">
         <div>
-          <h1 class="heading" style="margin:0;">my <span>appointments</span></h1>
+          <h1 class="heading" style="margin:0;">mening <span>yozuvlarim</span></h1>
           <div class="muted" id="who"></div>
         </div>
         <div class="row" style="gap:10px;">
-          <a class="btn" href="index.html#book">new booking <span class="fas fa-chevron-right"></span></a>
-          <button class="btn" id="logoutBtn" type="button" style="cursor:pointer;">logout <span class="fas fa-chevron-right"></span></button>
+          <a class="btn" href="index.html#book">yangi yozilish <span class="fas fa-chevron-right"></span></a>
+          <button class="btn" id="logoutBtn" type="button" style="cursor:pointer;">chiqish <span class="fas fa-chevron-right"></span></button>
         </div>
       </div>
       <div class="list" id="list"></div>
-      <div class="muted" id="empty" style="display:none;margin-top:14px;">No appointments yet.</div>
+      <div class="muted" id="empty" style="display:none;margin-top:14px;">Hali yozuvlar yo‘q.</div>
     </div>
   </div>
 
@@ -73,7 +78,7 @@
       const res = await fetch(url, opts);
       const json = await res.json().catch(() => null);
       if (!res.ok || !json || !json.ok) {
-        const msg = (json && json.error) ? json.error : ("Request failed (" + res.status + ")");
+        const msg = (json && json.error) ? json.error : ("So‘rov bajarilmadi (" + res.status + ")");
         const e = new Error(msg);
         e.status = res.status;
         throw e;
@@ -84,7 +89,7 @@
     function pill(status) {
       const s = (status || "").toLowerCase();
       const cls = (s === "confirmed" || s === "cancelled") ? s : "pending";
-      const label = cls === "confirmed" ? "confirmed" : (cls === "cancelled" ? "cancelled" : "pending (waiting)");
+      const label = cls === "confirmed" ? "tasdiqlangan" : (cls === "cancelled" ? "bekor qilingan" : "kutilmoqda");
       return '<span class="pill ' + cls + '">' + label + '</span>';
     }
 
@@ -121,7 +126,7 @@
           '<div class="meta">' +
             '<span><i class="fa-regular fa-calendar"></i> ' + a.date + '</span>' +
             '<span><i class="fa-regular fa-clock"></i> ' + a.time + '</span>' +
-            '<span class="muted">Reason: ' + reason + '</span>' +
+            '<span class="muted">Sabab: ' + reason + '</span>' +
           '</div>';
         wrap.appendChild(div);
       }

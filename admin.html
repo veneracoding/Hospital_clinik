@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel | Medcare</title>
+  <title>Admin panel | Medcare</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <style>
-    body { background:#f9f9f9; }
+    body { background: var(--bg); }
     .wrap { max-width: 1200px; margin: 100px auto 50px; padding: 0 20px; }
     .panel {
-      background:#fff;
+      background: var(--surface);
       border-radius: 18px;
       box-shadow: 0 5px 20px rgba(0,0,0,0.08);
       padding: 22px;
@@ -34,7 +34,7 @@
       border: 1px solid rgba(0,0,0,.06);
       border-radius: 16px;
       padding: 16px;
-      background:#fff;
+      background: var(--surface);
     }
     .muted { color: var(--light-color); font-size: 1.5rem; }
     .mini { font-size: 1.4rem; color: var(--light-color); }
@@ -47,6 +47,31 @@
     .form textarea { resize: vertical; min-height: 100px; }
     .split { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     @media (max-width: 820px){ .split{ grid-template-columns: 1fr; } }
+    .name-group { display:flex; gap: 0; }
+    .name-group .box:first-child { border-radius: .5rem 0 0 .5rem; border-right: none; }
+    .name-group .box:last-child { border-radius: 0 .5rem .5rem 0; }
+    .name-group .box { border-radius: 0; }
+    .name-group .box:focus { z-index: 1; }
+    .file-upload { position: relative; overflow: hidden; display: inline-flex; }
+    .file-upload input[type="file"] {
+      position: absolute;
+      left: 0; top: 0; opacity: 0;
+      width: 100%; height: 100%; cursor: pointer;
+    }
+    .file-upload-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 18px; border-radius: .5rem;
+      background: var(--surface-2); border: 1px solid var(--outline);
+      color: var(--text); font-size: 1.5rem; cursor: pointer;
+      white-space: nowrap;
+    }
+    .file-upload-btn:hover { background: var(--surface); border-color: var(--green); color: var(--green); }
+    .file-name { font-size: 1.4rem; color: var(--muted); margin-top: 6px; }
+    .form-label { font-size: 1.3rem; color: var(--muted); margin-bottom: 4px; display: block; }
+    input.box, textarea.box { width: 100%; padding: 12px 14px; border-radius: .5rem; border: 1px solid var(--outline); background: var(--surface); color: var(--text); font-size: 1.5rem; font-family: inherit; box-sizing: border-box; }
+    input.box:focus, textarea.box:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(22,160,133,.15); }
+    input.box::placeholder, textarea.box::placeholder { color: var(--muted); opacity: .7; }
+    input.box[type="time"] { cursor: pointer; }
     .pill {
       display:inline-block; padding: 6px 10px; border-radius: 999px;
       font-size: 1.3rem; border: 1px solid rgba(22,160,133,.25); background:#f7fffd; color: var(--black);
@@ -60,13 +85,18 @@
   <header class="header">
     <a href="index.html" class="logo"><i class="fa-solid fa-heart-pulse"></i> medcare.</a>
     <nav class="navbar">
-      <a href="index.html#home">home</a>
-      <a href="index.html#doctors">doctors</a>
-      <a href="index.html#book">book</a>
+      <a href="index.html#home">bosh sahifa</a>
+      <a href="index.html#doctors">shifokorlar</a>
+      <a href="index.html#book">yozilish</a>
       <a href="admin.html">admin</a>
-      <a href="appointments.html">my appointments</a>
+      <a href="appointments.html">yozuvlarim</a>
     </nav>
-    <div id="menu-btn" class="fas fa-bars"></div>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Qorong‘i mavzu">
+        <span class="theme-toggle__thumb"><i class="fa-regular fa-sun"></i></span>
+      </button>
+      <div id="menu-btn" class="fas fa-bars"></div>
+    </div>
   </header>
 
   <div class="wrap">
@@ -77,14 +107,14 @@
           <div class="muted" id="who"></div>
         </div>
         <div class="row" style="gap:10px;">
-          <a class="btn" href="index.html">site <span class="fas fa-chevron-right"></span></a>
-          <button class="btn" id="logoutBtn" type="button" style="cursor:pointer;">logout <span class="fas fa-chevron-right"></span></button>
+          <a class="btn" href="index.html">sayt <span class="fas fa-chevron-right"></span></a>
+          <button class="btn" id="logoutBtn" type="button" style="cursor:pointer;">chiqish <span class="fas fa-chevron-right"></span></button>
         </div>
       </div>
 
       <div class="tabs">
-        <div class="tab active" data-tab="doctors"><i class="fa-solid fa-user-doctor"></i> Doctors</div>
-        <div class="tab" data-tab="appointments"><i class="fa-regular fa-calendar-check"></i> Appointments</div>
+        <div class="tab active" data-tab="doctors"><i class="fa-solid fa-user-doctor"></i> Shifokorlar</div>
+        <div class="tab" data-tab="appointments"><i class="fa-regular fa-calendar-check"></i> Yozuvlar</div>
       </div>
 
       <div id="tab-doctors" class="grid"></div>
@@ -98,7 +128,7 @@
       const res = await fetch(url, opts);
       const json = await res.json().catch(() => null);
       if (!res.ok || !json || !json.ok) {
-        const msg = (json && json.error) ? json.error : ("Request failed (" + res.status + ")");
+        const msg = (json && json.error) ? json.error : ("So‘rov bajarilmadi (" + res.status + ")");
         const e = new Error(msg);
         e.status = res.status;
         throw e;
@@ -109,7 +139,7 @@
     function pill(status) {
       const s = (status || "").toLowerCase();
       const cls = (s === "confirmed" || s === "cancelled") ? s : "pending";
-      const label = cls === "confirmed" ? "confirmed" : (cls === "cancelled" ? "cancelled" : "pending (waiting)");
+      const label = cls === "confirmed" ? "tasdiqlangan" : (cls === "cancelled" ? "bekor qilingan" : "kutilmoqda");
       return '<span class="pill ' + cls + '">' + label + '</span>';
     }
 
@@ -133,6 +163,8 @@
     function doctorCard(d) {
       const div = document.createElement("div");
       div.className = "card";
+      var firstName = d.name ? d.name.split(' ')[0] : '';
+      var lastName = d.name ? d.name.split(' ').slice(1).join(' ') : '';
       div.innerHTML =
         '<div class="doctor-head">' +
           '<div class="doc-left">' +
@@ -140,35 +172,41 @@
             '<div>' +
               '<div style="font-size:1.9rem;font-weight:700;color:var(--black)">' + (d.name || '') + '</div>' +
               '<div class="mini">' + (d.specialty || '') + '</div>' +
+              '<div class="mini"><i class="fa-regular fa-clock"></i> ' + (d.workStart || '09:00') + '-' + (d.workEnd || '17:00') + '</div>' +
+              '<div class="mini"><i class="fa-solid fa-hospital"></i> Medcare klinikasi</div>' +
               '<div class="mini">id: ' + d.id + '</div>' +
             '</div>' +
           '</div>' +
-          '<div class="actions">' +
-            '<button class="btn small" data-action="toggle">edit <span class="fas fa-chevron-right"></span></button>' +
-            '<a class="btn small" href="doctor.html?id=' + encodeURIComponent(d.id) + '">view <span class="fas fa-chevron-right"></span></a>' +
-            '<button class="btn small" data-action="delete" style="background:#fff1f2;border:1px solid rgba(244,63,94,.25);color:#b91c1c;">delete</button>' +
-          '</div>' +
         '</div>' +
         '<div class="form" style="display:none;margin-top:14px;">' +
-          '<div class="split">' +
-            '<input class="box" name="name" placeholder="Name" value="' + (d.name || '') + '"/>' +
-            '<input class="box" name="specialty" placeholder="Specialty" value="' + (d.specialty || '') + '"/>' +
+          '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;">Ism Familiya</div>' +
+          '<div class="name-group">' +
+            '<input class="box" name="firstName" placeholder="Ism" value="' + (firstName || '') + '"/>' +
+            '<input class="box" name="lastName" placeholder="Familiya" value="' + (lastName || '') + '"/>' +
           '</div>' +
-          '<textarea class="box" name="bio" placeholder="Biography">' + (d.bio || '') + '</textarea>' +
+          '<input class="box" name="specialty" placeholder="Mutaxassislik" value="' + (d.specialty || '') + '"/>' +
+          '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:10px;">Ta\'lim</div>' +
+          '<textarea class="box" name="education" placeholder="Ta\'lim joylari">' + (d.education || '') + '</textarea>' +
+          '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:10px;">Tajriba</div>' +
+          '<textarea class="box" name="experience" placeholder="Ish tajribasi">' + (d.experience || '') + '</textarea>' +
+          '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:10px;">Yutuqlar</div>' +
+          '<textarea class="box" name="achievements" placeholder="Yutuqlar va sertifikatlar">' + (d.achievements || '') + '</textarea>' +
+          '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:10px;">Tillar</div>' +
+          '<input class="box" name="languages" placeholder="Masalan: O\u2018zbek, Rus, Ingliz" value="' + (d.languages || '') + '"/>' +
+          '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:10px;">Ish vaqti</div>' +
           '<div class="split">' +
-            '<input class="box" name="facebook" placeholder="Facebook url" value="' + ((d.socials && d.socials.facebook) ? d.socials.facebook : '') + '"/>' +
-            '<input class="box" name="instagram" placeholder="Instagram url" value="' + ((d.socials && d.socials.instagram) ? d.socials.instagram : '') + '"/>' +
+            '<input class="box" name="workStart" type="time" value="' + (d.workStart || '09:00') + '"/>' +
+            '<input class="box" name="workEnd" type="time" value="' + (d.workEnd || '17:00') + '"/>' +
           '</div>' +
-          '<div class="split">' +
-            '<input class="box" name="twitter" placeholder="Twitter url" value="' + ((d.socials && d.socials.twitter) ? d.socials.twitter : '') + '"/>' +
-            '<input class="box" name="linkedin" placeholder="LinkedIn url" value="' + ((d.socials && d.socials.linkedin) ? d.socials.linkedin : '') + '"/>' +
+          '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:6px;">Foto</div>' +
+          '<input class="box" name="photo" placeholder="Foto URL" value="' + (d.photo || '') + '"/>' +
+          '<div class="file-upload">' +
+            '<input class="box" type="file" name="photoFile" accept="image/*" data-role="file"/>' +
+            '<div class="file-upload-btn"><i class="fa-regular fa-image"></i> Fayl tanlang</div>' +
           '</div>' +
-          '<div class="split">' +
-            '<input class="box" name="photo" placeholder="Photo url (or upload below)" value="' + (d.photo || '') + '"/>' +
-            '<input class="box" type="file" name="photoFile" accept="image/*" />' +
-          '</div>' +
+          '<div class="file-name" data-role="fileName"></div>' +
           '<div class="actions">' +
-            '<button class="btn small" data-action="save">save <span class="fas fa-chevron-right"></span></button>' +
+            '<button class="btn small" data-action="save">saqlash <span class="fas fa-chevron-right"></span></button>' +
             '<div class="muted" data-role="msg" style="display:none;"></div>' +
           '</div>' +
         '</div>';
@@ -185,20 +223,30 @@
         form.style.display = (form.style.display === "none") ? "grid" : "none";
       });
 
+      const fileInput = div.querySelector('[data-role="file"]');
+      const fileName = div.querySelector('[data-role="fileName"]');
+      if (fileInput && fileName) {
+        fileInput.addEventListener("change", () => {
+          fileName.textContent = fileInput.files[0] ? fileInput.files[0].name : "";
+        });
+      }
+
       div.querySelector('[data-action="delete"]').addEventListener("click", async () => {
-        if (!confirm("Delete doctor?")) return;
+        if (!confirm("Shifokorni o‘chirishni xohlaysizmi?")) return;
         try {
           await fetchJson("/api/admin/doctors/" + encodeURIComponent(d.id), { method: "DELETE" });
           div.remove();
         } catch (e) {
-          alert(e.message || "Delete failed");
+          alert(e.message || "O‘chirish amalga oshmadi");
         }
       });
 
       div.querySelector('[data-action="save"]').addEventListener("click", async () => {
-        showMsg("Saving...", "ok");
+        showMsg("Saqlanmoqda...", "ok");
         try {
-          const name = div.querySelector('input[name="name"]').value.trim();
+          const firstName = div.querySelector('input[name="firstName"]').value.trim();
+          const lastName = div.querySelector('input[name="lastName"]').value.trim();
+          const name = (firstName + " " + lastName).trim();
           const specialty = div.querySelector('input[name="specialty"]').value.trim();
           const bio = div.querySelector('textarea[name="bio"]').value.trim();
           const photoUrlInput = div.querySelector('input[name="photo"]').value.trim();
@@ -213,7 +261,14 @@
           }
 
           const patch = {
-            name, specialty, bio, photo,
+            name, firstName, lastName, specialty,
+            education: div.querySelector('textarea[name="education"]').value.trim(),
+            experience: div.querySelector('textarea[name="experience"]').value.trim(),
+            achievements: div.querySelector('textarea[name="achievements"]').value.trim(),
+            languages: div.querySelector('input[name="languages"]').value.trim(),
+            workStart: div.querySelector('input[name="workStart"]').value.trim(),
+            workEnd: div.querySelector('input[name="workEnd"]').value.trim(),
+            photo,
             socials: {
               facebook: div.querySelector('input[name="facebook"]').value.trim(),
               twitter: div.querySelector('input[name="twitter"]').value.trim(),
@@ -228,13 +283,15 @@
             body: JSON.stringify(patch)
           });
 
-          showMsg("Saved.", "ok");
+          showMsg("Saqlandi.", "ok");
           // refresh header display
+          const timeDiv = div.querySelector(".doc-left").querySelectorAll(".mini")[0];
+          if (timeDiv) timeDiv.innerHTML = '<i class="fa-regular fa-clock"></i> ' + (out.doctor.workStart || "09:00") + "-" + (out.doctor.workEnd || "17:00");
           div.querySelector(".photo").src = out.doctor.photo || "";
           div.querySelector(".doc-left div div").textContent = out.doctor.name || "";
           div.querySelector(".doc-left div .mini").textContent = out.doctor.specialty || "";
         } catch (e) {
-          showMsg(e.message || "Save failed", "error");
+          showMsg(e.message || "Saqlash amalga oshmadi", "error");
         }
       });
 
@@ -245,19 +302,36 @@
       const div = document.createElement("div");
       div.className = "card";
       div.innerHTML =
-        '<div style="font-size:1.9rem;font-weight:800;color:var(--black)"><i class="fa-solid fa-plus"></i> Add new doctor</div>' +
+        '<div style="font-size:1.9rem;font-weight:800;color:var(--black)"><i class="fa-solid fa-plus"></i> Yangi shifokor qo‘shish</div>' +
         '<div class="form">' +
-          '<div class="split">' +
-            '<input class="box" name="name" placeholder="Name" />' +
-            '<input class="box" name="specialty" placeholder="Specialty" />' +
+          '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;">Ism Familiya</div>' +
+          '<div class="name-group">' +
+            '<input class="box" name="firstName" placeholder="Ism" />' +
+            '<input class="box" name="lastName" placeholder="Familiya" />' +
           '</div>' +
-          '<textarea class="box" name="bio" placeholder="Biography"></textarea>' +
+          '<input class="box" name="specialty" placeholder="Mutaxassislik" />' +
+          '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:10px;">Ta\'lim</div>' +
+          '<textarea class="box" name="education" placeholder="Ta\'lim joylari (har bir yangi qatordan)"></textarea>' +
+          '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:10px;">Tajriba</div>' +
+          '<textarea class="box" name="experience" placeholder="Ish tajribasi va sohaning"></textarea>' +
+          '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:10px;">Yutuqlar</div>' +
+          '<textarea class="box" name="achievements" placeholder="Yutuqlar va sertifikatlar"></textarea>' +
+          '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:10px;">Tillar</div>' +
+          '<input class="box" name="languages" placeholder="Masalan: O'\u2018zbek, Rus, Ingliz" />' +
+          '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:10px;">Ish vaqti</div>' +
           '<div class="split">' +
-            '<input class="box" name="photo" placeholder="Photo url (optional)" />' +
-            '<input class="box" type="file" name="photoFile" accept="image/*" />' +
+            '<input class="box" name="workStart" type="time" value="09:00"/>' +
+            '<input class="box" name="workEnd" type="time" value="17:00"/>' +
           '</div>' +
+          '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:6px;">Foto (ixtiyoriy)</div>' +
+          '<input class="box" name="photo" placeholder="Foto URL" />' +
+          '<div class="file-upload">' +
+            '<input class="box" type="file" name="photoFile" accept="image/*" data-role="file"/>' +
+            '<div class="file-upload-btn"><i class="fa-regular fa-image"></i> Fayl tanlang</div>' +
+          '</div>' +
+          '<div class="file-name" data-role="fileName"></div>' +
           '<div class="actions">' +
-            '<button class="btn small" data-action="create">create <span class="fas fa-chevron-right"></span></button>' +
+            '<button class="btn small" data-action="create">yaratish <span class="fas fa-chevron-right"></span></button>' +
             '<div class="muted" data-role="msg" style="display:none;"></div>' +
           '</div>' +
         '</div>';
@@ -269,12 +343,27 @@
         msg.textContent = t;
       };
 
+      const fileInput = div.querySelector('[data-role="file"]');
+      const fileName = div.querySelector('[data-role="fileName"]');
+      if (fileInput && fileName) {
+        fileInput.addEventListener("change", () => {
+          fileName.textContent = fileInput.files[0] ? fileInput.files[0].name : "";
+        });
+      }
+
       div.querySelector('[data-action="create"]').addEventListener("click", async () => {
-        showMsg("Creating...", "ok");
+        showMsg("Yaratilmoqda...", "ok");
         try {
-          const name = div.querySelector('input[name="name"]').value.trim();
+          const firstName = div.querySelector('input[name="firstName"]').value.trim();
+          const lastName = div.querySelector('input[name="lastName"]').value.trim();
+          const name = (firstName + " " + lastName).trim();
           const specialty = div.querySelector('input[name="specialty"]').value.trim();
-          const bio = div.querySelector('textarea[name="bio"]').value.trim();
+          const education = div.querySelector('textarea[name="education"]').value.trim();
+          const experience = div.querySelector('textarea[name="experience"]').value.trim();
+          const achievements = div.querySelector('textarea[name="achievements"]').value.trim();
+          const languages = div.querySelector('input[name="languages"]').value.trim();
+          const workStart = div.querySelector('input[name="workStart"]').value.trim();
+          const workEnd = div.querySelector('input[name="workEnd"]').value.trim();
           const photoUrlInput = div.querySelector('input[name="photo"]').value.trim();
           const photoFile = div.querySelector('input[name="photoFile"]').files[0];
 
@@ -289,18 +378,25 @@
           const out = await fetchJson("/api/admin/doctors", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, specialty, bio, photo, socials: {} })
+            body: JSON.stringify({ name, firstName, lastName, specialty, education, experience, achievements, languages, workStart, workEnd, photo, socials: {} })
           });
 
-          showMsg("Created.", "ok");
-          div.querySelector('input[name="name"]').value = "";
+          showMsg("Yaratildi.", "ok");
+          div.querySelector('input[name="firstName"]').value = "";
+          div.querySelector('input[name="lastName"]').value = "";
           div.querySelector('input[name="specialty"]').value = "";
-          div.querySelector('textarea[name="bio"]').value = "";
+          div.querySelector('textarea[name="education"]').value = "";
+          div.querySelector('textarea[name="experience"]').value = "";
+          div.querySelector('textarea[name="achievements"]').value = "";
+          div.querySelector('input[name="languages"]').value = "";
+          div.querySelector('input[name="workStart"]').value = "09:00";
+          div.querySelector('input[name="workEnd"]').value = "17:00";
           div.querySelector('input[name="photo"]').value = "";
           div.querySelector('input[name="photoFile"]').value = "";
+          if (fileName) fileName.textContent = "";
           if (onCreated) onCreated(out.doctor);
         } catch (e) {
-          showMsg(e.message || "Create failed", "error");
+          showMsg(e.message || "Yaratish amalga oshmadi", "error");
         }
       });
 
@@ -333,16 +429,16 @@
               '<div style="font-size:1.9rem;font-weight:800;color:var(--black)">' + doc + '</div>' +
               '<div class="mini">' + usr + '</div>' +
               '<div class="mini"><i class="fa-regular fa-calendar"></i> ' + a.date + ' &nbsp; <i class="fa-regular fa-clock"></i> ' + a.time + '</div>' +
-              '<div class="mini">Reason: ' + (a.reason || "—") + '</div>' +
+              '<div class="mini">Sabab: ' + (a.reason || "—") + '</div>' +
             '</div>' +
             '<div style="display:flex;flex-direction:column;gap:10px;align-items:flex-end;">' +
               pill(a.status) +
               '<select class="box" style="min-width:220px;" data-role="status">' +
-                '<option value="pending">pending (waiting)</option>' +
-                '<option value="confirmed">confirmed</option>' +
-                '<option value="cancelled">cancelled</option>' +
+                '<option value="pending">kutilmoqda</option>' +
+                '<option value="confirmed">tasdiqlangan</option>' +
+                '<option value="cancelled">bekor qilingan</option>' +
               '</select>' +
-              '<button class="btn small" data-action="set">update <span class="fas fa-chevron-right"></span></button>' +
+              '<button class="btn small" data-action="set">yangilash <span class="fas fa-chevron-right"></span></button>' +
             '</div>' +
           '</div>';
         const sel = div.querySelector('[data-role="status"]');
@@ -356,7 +452,7 @@
             });
             loadAppointments();
           } catch (e) {
-            alert(e.message || "Update failed");
+            alert(e.message || "Yangilash amalga oshmadi");
           }
         });
         wrap.appendChild(div);
@@ -364,7 +460,7 @@
       if (!list.length) {
         const empty = document.createElement("div");
         empty.className = "muted";
-        empty.textContent = "No appointments yet.";
+        empty.textContent = "Hali yozuvlar yo‘q.";
         wrap.appendChild(empty);
       }
     }

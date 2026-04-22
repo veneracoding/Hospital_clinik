@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Documentation | Medcare</title>
+  <title>Hujjatlar | Medcare</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <style>
-    body { background:#f9f9f9; }
+    body { background: var(--bg); }
     .wrap { max-width: 1100px; margin: 100px auto 50px; padding: 0 20px; }
     .doc-card {
-      background:#fff;
+      background: var(--surface);
       border-radius: 16px;
       box-shadow: 0 5px 20px rgba(0,0,0,0.08);
       padding: 22px;
@@ -33,40 +33,45 @@
   <header class="header">
     <a href="index.html" class="logo"><i class="fa-solid fa-heart-pulse"></i> medcare.</a>
     <nav class="navbar">
-      <a href="index.html#home">home</a>
-      <a href="index.html#services">services</a>
-      <a href="index.html#about">about</a>
-      <a href="index.html#doctors">doctors</a>
-      <a href="index.html#book">book</a>
-      <a href="appointments.html">my appointments</a>
+      <a href="index.html#home">bosh sahifa</a>
+      <a href="index.html#services">xizmatlar</a>
+      <a href="index.html#about">biz haqimizda</a>
+      <a href="index.html#doctors">shifokorlar</a>
+      <a href="index.html#book">yozilish</a>
+      <a href="appointments.html">yozuvlarim</a>
     </nav>
-    <div id="menu-btn" class="fas fa-bars"></div>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Qorong‘i mavzu">
+        <span class="theme-toggle__thumb"><i class="fa-regular fa-sun"></i></span>
+      </button>
+      <div id="menu-btn" class="fas fa-bars"></div>
+    </div>
   </header>
 
   <div class="wrap">
     <div class="doc-card" id="services">
-      <h2>Services documentation</h2>
-      <p>Here you can place official information about services, rules, preparation, prices, and FAQ (same style, no extra UI).</p>
+      <h2>Xizmatlar bo‘yicha hujjatlar</h2>
+      <p>Bu yerga xizmatlar, qoidalar, tayyorgarlik, narxlar va tez-tez so‘raladigan savollar (FAQ) bo‘yicha rasmiy ma’lumotlarni joylashingiz mumkin.</p>
       <div class="doc-list">
-        <div class="doc-item"><i class="fa-solid fa-check"></i><span>How to book: choose doctor → date → time → submit (status becomes pending/waiting).</span></div>
-        <div class="doc-item"><i class="fa-solid fa-check"></i><span>Working hours: 09:00–17:00 (30 min slots). Busy slots disappear automatically.</span></div>
-        <div class="doc-item"><i class="fa-solid fa-check"></i><span>Contact: use Contact page to send questions to the clinic.</span></div>
+        <div class="doc-item"><i class="fa-solid fa-check"></i><span>Qabulga yozilish: shifokor → sana → vaqt → yuborish (holat: kutilmoqda).</span></div>
+        <div class="doc-item"><i class="fa-solid fa-check"></i><span>Ish vaqti: 09:00–17:00 (30 daqiqalik slotlar). Band vaqtlar avtomatik yashiriladi.</span></div>
+        <div class="doc-item"><i class="fa-solid fa-check"></i><span>Aloqa: klinikaga savollar yuborish uchun “Bog‘lanish” sahifasidan foydalaning.</span></div>
       </div>
     </div>
 
     <div class="doc-card" id="about">
-      <h2>About documentation</h2>
-      <p>Add clinic history, licenses, policies, and patient rights here.</p>
+      <h2>“Biz haqimizda” hujjatlari</h2>
+      <p>Bu yerga klinika tarixi, litsenziyalar, siyosatlar va bemorlar huquqlarini joylang.</p>
     </div>
 
     <div class="doc-card" id="doctors">
-      <h2>Doctors documentation</h2>
-      <p>For biographies open a doctor card → Learn more (biography page).</p>
+      <h2>Shifokorlar bo‘yicha hujjatlar</h2>
+      <p>Biografiya uchun shifokor kartasini oching → “Batafsil” (biografiya sahifasi).</p>
     </div>
 
     <div class="doc-card" id="blogs">
-      <h2>Blogs documentation</h2>
-      <p>Add article sources, publication rules, disclaimers, and medical content policy here.</p>
+      <h2>Bloglar bo‘yicha hujjatlar</h2>
+      <p>Bu yerga maqola manbalari, nashr qoidalari, ogohlantirishlar (disclaimer) va tibbiy kontent siyosatini joylang.</p>
     </div>
   </div>
 

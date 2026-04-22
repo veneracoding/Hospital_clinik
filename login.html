@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login | Medcare</title>
+  <title>Kirish | Medcare</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <style>
     body {
       font-family: 'Poppins', sans-serif;
       margin: 0;
-      background: #f0f5f5;
+      background: var(--bg);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -16,7 +17,7 @@
     }
 
     .login-container {
-      background: #fff;
+      background: var(--surface);
       padding: 40px;
       border-radius: 15px;
       box-shadow: 0 5px 20px rgba(0,0,0,0.1);
@@ -37,6 +38,8 @@
       border-radius: 8px;
       font-size: 16px;
       transition: 0.3s;
+      background: var(--surface);
+      color: var(--text);
     }
 
     .login-container input:focus {
@@ -84,16 +87,21 @@
   </style>
 </head>
 <body>
+  <div style="position:fixed;top:18px;right:18px;z-index:1001;">
+    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Qorong‘i mavzu">
+      <span class="theme-toggle__thumb"><i class="fa-regular fa-sun"></i></span>
+    </button>
+  </div>
   <div class="login-container">
-    <h2>Login</h2>
-    <p id="loginHint" style="display:none;color:#20b486;margin-bottom:15px;">Sign in with an admin account to continue.</p>
+    <h2>Kirish</h2>
+    <p id="loginHint" style="display:none;color:#20b486;margin-bottom:15px;">Davom etish uchun admin akkaunt bilan kiring.</p>
     <form id="loginForm">
-      <div class="error" id="errorMsg">⚠️ Invalid email or password.</div>
-      <input type="email" id="email" placeholder="Enter your email" required />
-      <input type="password" id="password" placeholder="Enter your password" required />
-      <button type="submit">Login</button>
+      <div class="error" id="errorMsg">⚠️ Email yoki parol noto‘g‘ri.</div>
+      <input type="email" id="email" placeholder="Emailingizni kiriting" required />
+      <input type="password" id="password" placeholder="Parolni kiriting" required />
+      <button type="submit">Kirish</button>
     </form>
-    <p>Don't have an account? <a href="register.html">Register</a></p>
+    <p>Akkauntingiz yo‘qmi? <a href="register.html">Ro‘yxatdan o‘tish</a></p>
   </div>
 
   <script>
@@ -101,7 +109,7 @@
       const res = await fetch(url, Object.assign({ headers: { "Content-Type": "application/json" } }, opts));
       const json = await res.json().catch(() => null);
       if (!res.ok || !json || !json.ok) {
-        const msg = (json && json.error) ? json.error : ("Request failed (" + res.status + ")");
+        const msg = (json && json.error) ? json.error : ("So‘rov bajarilmadi (" + res.status + ")");
         throw new Error(msg);
       }
       return json.data;
@@ -125,18 +133,18 @@
       errorMsg.style.display = "none";
 
       if (!email || !password) {
-        alert("Please fill in all fields.");
+        alert("Iltimos, barcha maydonlarni to‘ldiring.");
         return;
       }
 
       if (!/^[^ ]+@[^ ]+\.[a-z]{2,}$/i.test(email)) {
-        errorMsg.textContent = "⚠️ Please enter a valid email address.";
+        errorMsg.textContent = "⚠️ To‘g‘ri email manzilini kiriting.";
         errorMsg.style.display = "block";
         return;
       }
 
       if (password.length < 6) {
-        errorMsg.textContent = "⚠️ Password must be at least 6 characters.";
+        errorMsg.textContent = "⚠️ Parol kamida 6 ta belgidan iborat bo‘lishi kerak.";
         errorMsg.style.display = "block";
         return;
       }
@@ -157,7 +165,7 @@
         }
         window.location.href = "appointments.html";
       } catch (err) {
-        errorMsg.textContent = "⚠️ " + (err && err.message ? err.message : "Invalid email or password.");
+        errorMsg.textContent = "⚠️ " + (err && err.message ? err.message : "Email yoki parol noto‘g‘ri.");
         errorMsg.style.display = "block";
       }
     });

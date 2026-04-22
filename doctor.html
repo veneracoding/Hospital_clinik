@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Doctor | Medcare</title>
+  <title>Shifokor | Medcare</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <style>
-    body { background:#f9f9f9; }
+    body { background: var(--bg); }
     .wrap { max-width: 1000px; margin: 100px auto 50px; padding: 0 20px; }
     .card {
-      background:#fff;
+      background: var(--surface);
       border-radius: 18px;
       box-shadow: 0 5px 20px rgba(0,0,0,0.08);
       padding: 22px;
@@ -41,38 +41,43 @@
   <header class="header">
     <a href="index.html" class="logo"><i class="fa-solid fa-heart-pulse"></i> medcare.</a>
     <nav class="navbar">
-      <a href="index.html#home">home</a>
-      <a href="index.html#doctors">doctors</a>
-      <a href="index.html#book">book</a>
-      <a href="appointments.html">my appointments</a>
-      <a href="docs.html#doctors">documentation</a>
+      <a href="index.html#home">bosh sahifa</a>
+      <a href="index.html#doctors">shifokorlar</a>
+      <a href="index.html#book">yozilish</a>
+      <a href="appointments.html">yozuvlarim</a>
+      <a href="docs.html#doctors">hujjatlar</a>
     </nav>
-    <div id="menu-btn" class="fas fa-bars"></div>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Qorong‘i mavzu">
+        <span class="theme-toggle__thumb"><i class="fa-regular fa-sun"></i></span>
+      </button>
+      <div id="menu-btn" class="fas fa-bars"></div>
+    </div>
   </header>
 
   <div class="wrap">
     <div class="card">
       <div class="top">
-        <img id="photo" class="photo" alt="Doctor photo" />
+        <img id="photo" class="photo" alt="Shifokor fotosi" />
         <div>
-          <h1 id="name" class="name">Doctor</h1>
+          <h1 id="name" class="name">Shifokor</h1>
           <div id="spec" class="spec"></div>
         </div>
       </div>
 
       <div class="chips">
-        <div class="chip"><i class="fa-regular fa-clock"></i> Mon–Fri, 09:00–17:00</div>
-        <div class="chip"><i class="fa-solid fa-location-dot"></i> Medcare clinic</div>
-        <div class="chip"><i class="fa-solid fa-star"></i> Experienced specialist</div>
+        <div class="chip"><i class="fa-regular fa-clock"></i> Du–Ju, 09:00–17:00</div>
+        <div class="chip"><i class="fa-solid fa-location-dot"></i> Medcare klinikasi</div>
+        <div class="chip"><i class="fa-solid fa-star"></i> Tajribali mutaxassis</div>
       </div>
 
       <p class="bio" id="bio">
-        Biography will appear here. You can replace this text with real doctor information (education, experience, awards, languages).
+        Bu yerda shifokor biografiyasi ko‘rinadi. Ushbu matnni haqiqiy ma’lumotlar (ta’lim, tajriba, yutuqlar, tillar) bilan almashtiring.
       </p>
 
       <div class="actions">
-        <a class="btn" href="index.html#book">book now <span class="fas fa-chevron-right"></span></a>
-        <a class="btn" href="index.html#doctors">back <span class="fas fa-chevron-right"></span></a>
+        <a class="btn" href="index.html#book">qabulga yozilish <span class="fas fa-chevron-right"></span></a>
+        <a class="btn" href="index.html#doctors">orqaga <span class="fas fa-chevron-right"></span></a>
       </div>
     </div>
   </div>
@@ -83,7 +88,7 @@
       const res = await fetch(url, opts);
       const json = await res.json().catch(() => null);
       if (!res.ok || !json || !json.ok) {
-        const msg = (json && json.error) ? json.error : ("Request failed (" + res.status + ")");
+        const msg = (json && json.error) ? json.error : ("So‘rov bajarilmadi (" + res.status + ")");
         throw new Error(msg);
       }
       return json.data;
@@ -99,8 +104,8 @@
       const doctors = await fetchJson("/api/doctors");
       const d = doctors.find(x => x.id === id) || doctors[0];
 
-      document.title = (d ? d.name : "Doctor") + " | Medcare";
-      document.getElementById("name").textContent = d ? d.name : "Doctor";
+      document.title = (d ? d.name : "Shifokor") + " | Medcare";
+      document.getElementById("name").textContent = d ? d.name : "Shifokor";
       document.getElementById("spec").textContent = d ? d.specialty : "";
       const photo = document.getElementById("photo");
       if (d && d.photo) photo.src = d.photo;
