@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hujjatlar | Medcare</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    body { background: var(--bg); }
+    .wrap { max-width: 1100px; margin: 100px auto 50px; padding: 0 20px; }
+    .doc-card {
+      background: var(--surface);
+      border-radius: 16px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+      padding: 22px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(0,0,0,0.04);
+    }
+    .doc-card h2 { font-size: 2.4rem; margin-bottom: 10px; color: var(--black); }
+    .doc-card p { font-size: 1.6rem; color: var(--light-color); line-height: 1.6; }
+    .doc-list { margin-top: 10px; display:grid; gap: 10px; }
+    .doc-item {
+      display:flex; gap: 10px; align-items:flex-start;
+      padding: 12px; border-radius: 14px;
+      background:#f7fffd; border: 1px solid rgba(22,160,133,.18);
+    }
+    .doc-item i { color: var(--green); margin-top: 3px; }
+    .doc-item span { font-size: 1.6rem; color: var(--black); line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="index.html" class="logo"><i class="fa-solid fa-heart-pulse"></i> medcare.</a>
+    <nav class="navbar">
+      <a href="index.html#home">bosh sahifa</a>
+      <a href="index.html#services">xizmatlar</a>
+      <a href="index.html#about">biz haqimizda</a>
+      <a href="index.html#doctors">shifokorlar</a>
+      <a href="index.html#book">yozilish</a>
+      <a href="appointments.html">yozuvlarim</a>
+    </nav>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Qorong‘i mavzu">
+        <span class="theme-toggle__thumb"><i class="fa-regular fa-sun"></i></span>
+      </button>
+      <div id="menu-btn" class="fas fa-bars"></div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="doc-card" id="services">
+      <h2>Xizmatlar bo‘yicha hujjatlar</h2>
+      <p>Bu yerga xizmatlar, qoidalar, tayyorgarlik, narxlar va tez-tez so‘raladigan savollar (FAQ) bo‘yicha rasmiy ma’lumotlarni joylashingiz mumkin.</p>
+      <div class="doc-list">
+        <div class="doc-item"><i class="fa-solid fa-check"></i><span>Qabulga yozilish: shifokor → sana → vaqt → yuborish (holat: kutilmoqda).</span></div>
+        <div class="doc-item"><i class="fa-solid fa-check"></i><span>Ish vaqti: 09:00–17:00 (30 daqiqalik slotlar). Band vaqtlar avtomatik yashiriladi.</span></div>
+        <div class="doc-item"><i class="fa-solid fa-check"></i><span>Aloqa: klinikaga savollar yuborish uchun “Bog‘lanish” sahifasidan foydalaning.</span></div>
+      </div>
+    </div>
+
+    <div class="doc-card" id="about">
+      <h2>“Biz haqimizda” hujjatlari</h2>
+      <p>Bu yerga klinika tarixi, litsenziyalar, siyosatlar va bemorlar huquqlarini joylang.</p>
+    </div>
+
+    <div class="doc-card" id="doctors">
+      <h2>Shifokorlar bo‘yicha hujjatlar</h2>
+      <p>Biografiya uchun shifokor kartasini oching → “Batafsil” (biografiya sahifasi).</p>
+    </div>
+
+    <div class="doc-card" id="blogs">
+      <h2>Bloglar bo‘yicha hujjatlar</h2>
+      <p>Bu yerga maqola manbalari, nashr qoidalari, ogohlantirishlar (disclaimer) va tibbiy kontent siyosatini joylang.</p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+

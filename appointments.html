@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yozuvlarim | Medcare</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    body { background: var(--bg); }
+    .page-wrap { max-width: 1000px; margin: 100px auto 40px; padding: 0 20px; }
+    .card {
+      background: var(--surface);
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+      padding: 22px;
+    }
+    .row { display:flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+    .muted { color: var(--light-color); font-size: 1.5rem; }
+    .pill {
+      display:inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 1.3rem;
+      border: 1px solid rgba(22,160,133,.25);
+      background: #f7fffd;
+      color: var(--black);
+    }
+    .pill.pending { background: #fff8e6; border-color: rgba(255,165,0,.35); }
+    .pill.confirmed { background: #f0fff4; border-color: rgba(34,197,94,.35); }
+    .pill.cancelled { background: #fff1f2; border-color: rgba(244,63,94,.35); }
+    .list { margin-top: 16px; display:grid; gap: 12px; }
+    .apt { border: 1px solid rgba(0,0,0,.06); border-radius: 14px; padding: 14px; }
+    .apt h3 { font-size: 1.9rem; margin: 0; }
+    .apt .meta { margin-top: 8px; display:flex; gap: 10px; flex-wrap: wrap; align-items:center; }
+    .apt .meta span { font-size: 1.4rem; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="index.html" class="logo"><i class="fa-solid fa-heart-pulse"></i> medcare.</a>
+    <nav class="navbar">
+      <a href="index.html#home">bosh sahifa</a>
+      <a href="index.html#doctors">shifokorlar</a>
+      <a href="index.html#book">yozilish</a>
+      <a href="appointments.html">yozuvlarim</a>
+      <a href="admin.html">admin</a>
+      <a href="login.html">kirish</a>
+    </nav>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Qorong‘i mavzu">
+        <span class="theme-toggle__thumb"><i class="fa-regular fa-sun"></i></span>
+      </button>
+      <div id="menu-btn" class="fas fa-bars"></div>
+    </div>
+  </header>
+
+  <div class="page-wrap">
+    <div class="card">
+      <div class="row">
+        <div>
+          <h1 class="heading" style="margin:0;">mening <span>yozuvlarim</span></h1>
+          <div class="muted" id="who"></div>
+        </div>
+        <div class="row" style="gap:10px;">
+          <a class="btn" href="index.html#book">yangi yozilish <span class="fas fa-chevron-right"></span></a>
+          <button class="btn" id="logoutBtn" type="button" style="cursor:pointer;">chiqish <span class="fas fa-chevron-right"></span></button>
+        </div>
+      </div>
+      <div class="list" id="list"></div>
+      <div class="muted" id="empty" style="display:none;margin-top:14px;">Hali yozuvlar yo‘q.</div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    async function fetchJson(url, opts) {
+      const res = await fetch(url, opts);
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json || !json.ok) {
+        const msg = (json && json.error) ? json.error : ("So‘rov bajarilmadi (" + res.status + ")");
+        const e = new Error(msg);
+        e.status = res.status;
+        throw e;
+      }
+      return json.data;
+    }
+
+    function pill(status) {
+      const s = (status || "").toLowerCase();
+      const cls = (s === "confirmed" || s === "cancelled") ? s : "pending";
+      const label = cls === "confirmed" ? "tasdiqlangan" : (cls === "cancelled" ? "bekor qilingan" : "kutilmoqda");
+      return '<span class="pill ' + cls + '">' + label + '</span>';
+    }
+
+    async function loadMine() {
+      let me;
+      try {
+        me = await fetchJson("/api/me");
+      } catch (e) {
+        window.location.href = "login.html";
+        return;
+      }
+      document.getElementById("who").textContent = me.user.name + " (" + me.user.email + ")";
+
+      const list = await fetchJson("/api/appointments/mine");
+      const wrap = document.getElementById("list");
+      wrap.innerHTML = "";
+
+      if (!list.length) {
+        document.getElementById("empty").style.display = "block";
+        return;
+      }
+      document.getElementById("empty").style.display = "none";
+
+      for (const a of list) {
+        const doc = a.doctor ? (a.doctor.name + " • " + a.doctor.specialty) : a.doctorId;
+        const reason = a.reason ? a.reason : "—";
+        const div = document.createElement("div");
+        div.className = "apt";
+        div.innerHTML =
+          '<div class="row">' +
+            '<h3>' + doc + '</h3>' +
+            pill(a.status) +
+          '</div>' +
+          '<div class="meta">' +
+            '<span><i class="fa-regular fa-calendar"></i> ' + a.date + '</span>' +
+            '<span><i class="fa-regular fa-clock"></i> ' + a.time + '</span>' +
+            '<span class="muted">Sabab: ' + reason + '</span>' +
+          '</div>';
+        wrap.appendChild(div);
+      }
+    }
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      try { await fetchJson("/api/auth/logout", { method: "POST" }); } catch (e) {}
+      window.location.href = "index.html";
+    });
+
+    loadMine();
+  </script>
+</body>
+</html>
+

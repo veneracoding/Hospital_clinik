@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ro‘yxatdan o‘tish | Medcare</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      background: var(--bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .login-container {
+      background: var(--surface);
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      width: 350px;
+      text-align: center;
+    }
+
+    .login-container h2 {
+      margin-bottom: 25px;
+      color: #20b486;
+    }
+
+    .login-container input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: 0.3s;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .login-container input:focus {
+      border-color: #20b486;
+      outline: none;
+    }
+
+    .login-container button {
+      background-color: #20b486;
+      color: #fff;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 18px;
+      transition: 0.3s;
+    }
+
+    .login-container button:hover {
+      background-color: #16916f;
+    }
+
+    .error {
+      color: red;
+      font-size: 14px;
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    .ok {
+      color: #16916f;
+      font-size: 14px;
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    .login-container p {
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .login-container a {
+      color: #20b486;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .login-container a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div style="position:fixed;top:18px;right:18px;z-index:1001;">
+    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Qorong‘i mavzu">
+      <span class="theme-toggle__thumb"><i class="fa-regular fa-sun"></i></span>
+    </button>
+  </div>
+  <div class="login-container">
+    <h2>Ro‘yxatdan o‘tish</h2>
+    <form id="registerForm">
+      <div class="error" id="errorMsg">⚠️ Ro‘yxatdan o‘tish amalga oshmadi.</div>
+      <div class="ok" id="okMsg">✅ Akkaunt yaratildi. Endi kirishingiz mumkin.</div>
+      <input type="text" id="name" placeholder="Ism-familiya" required />
+      <input type="email" id="email" placeholder="Emailingizni kiriting" required />
+      <input type="password" id="password" placeholder="Parol yarating (kamida 6)" required />
+      <button type="submit">Akkaunt yaratish</button>
+    </form>
+    <p>Akkauntingiz bormi? <a href="login.html">Kirish</a></p>
+  </div>
+
+  <script>
+    async function fetchJson(url, opts) {
+      const res = await fetch(url, Object.assign({ headers: { "Content-Type": "application/json" } }, opts));
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json || !json.ok) {
+        const msg = (json && json.error) ? json.error : ("So‘rov bajarilmadi (" + res.status + ")");
+        throw new Error(msg);
+      }
+      return json.data;
+    }
+
+    document.getElementById("registerForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const errorMsg = document.getElementById("errorMsg");
+      const okMsg = document.getElementById("okMsg");
+      errorMsg.style.display = "none";
+      okMsg.style.display = "none";
+
+      try {
+        await fetchJson("/api/auth/register", {
+          method: "POST",
+          body: JSON.stringify({
+            name: document.getElementById("name").value.trim(),
+            email: document.getElementById("email").value.trim(),
+            password: document.getElementById("password").value
+          })
+        });
+        okMsg.style.display = "block";
+        this.reset();
+      } catch (err) {
+        errorMsg.textContent = "⚠️ " + (err && err.message ? err.message : "Ro‘yxatdan o‘tish amalga oshmadi");
+        errorMsg.style.display = "block";
+      }
+    });
+  </script>
+</body>
+</html>
+
