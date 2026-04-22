@@ -79,6 +79,30 @@
     .pill.pending { background: #fff8e6; border-color: rgba(255,165,0,.35); }
     .pill.confirmed { background: #f0fff4; border-color: rgba(34,197,94,.35); }
     .pill.cancelled { background: #fff1f2; border-color: rgba(244,63,94,.35); }
+    .apt-card { 
+      border: 1px solid rgba(0,0,0,.06); 
+      border-radius: 16px; 
+      padding: 16px; 
+      background: var(--surface);
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .apt-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .apt-info { flex: 1; min-width: 250px; }
+    .apt-doctor { font-size: 1.9rem; font-weight: 700; color: var(--black); margin-bottom: 6px; }
+    .apt-user { font-size: 1.4rem; color: var(--muted); margin-bottom: 4px; }
+    .apt-time { font-size: 1.4rem; color: var(--light-color); }
+    .apt-reason { font-size: 1.4rem; color: var(--muted); margin-top: 6px; padding: 8px 12px; background: var(--surface-2); border-radius: 8px; }
+    .apt-actions { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+    .apt-status { font-size: 1.3rem; padding: 6px 12px; border-radius: 999px; font-weight: 600; }
+    .apt-status.pending { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    .apt-status.confirmed { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .apt-status.cancelled { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    @media (max-width: 600px) { .apt-card { flex-direction: column; } .apt-actions { width: 100%; align-items: stretch; } }
   </style>
 </head>
 <body>
@@ -177,6 +201,10 @@
               '<div class="mini">id: ' + d.id + '</div>' +
             '</div>' +
           '</div>' +
+          '<div class="actions">' +
+            '<button class="btn small" data-action="toggle"><i class="fa-solid fa-pen"></i> Taxrirlash</button>' +
+            '<button class="btn small" data-action="delete" style="background:#fff1f2;border-color:rgba(244,63,94,.35);color:#b91c1c;"><i class="fa-solid fa-trash"></i> O‘chirish</button>' +
+          '</div>' +
         '</div>' +
         '<div class="form" style="display:none;margin-top:14px;">' +
           '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;">Ism Familiya</div>' +
@@ -192,7 +220,7 @@
           '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:10px;">Yutuqlar</div>' +
           '<textarea class="box" name="achievements" placeholder="Yutuqlar va sertifikatlar">' + (d.achievements || '') + '</textarea>' +
           '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:10px;">Tillar</div>' +
-          '<input class="box" name="languages" placeholder="Masalan: O\u2018zbek, Rus, Ingliz" value="' + (d.languages || '') + '"/>' +
+          '<input class="box" name="languages" placeholder="Masalan: Oʻzbek, Rus, Ingliz" value="' + (d.languages || '') + '"/>' +
           '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:10px;">Ish vaqti</div>' +
           '<div class="split">' +
             '<input class="box" name="workStart" type="time" value="' + (d.workStart || '09:00') + '"/>' +
@@ -317,7 +345,7 @@
           '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:10px;">Yutuqlar</div>' +
           '<textarea class="box" name="achievements" placeholder="Yutuqlar va sertifikatlar"></textarea>' +
           '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:10px;">Tillar</div>' +
-          '<input class="box" name="languages" placeholder="Masalan: O'\u2018zbek, Rus, Ingliz" />' +
+          '<input class="box" name="languages" placeholder="Masalan: Oʻzbek, Rus, Ingliz" />' +
           '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:10px;">Ish vaqti</div>' +
           '<div class="split">' +
             '<input class="box" name="workStart" type="time" value="09:00"/>' +
@@ -414,54 +442,59 @@
       for (const d of list) wrap.appendChild(doctorCard(d));
     }
 
-    async function loadAppointments() {
+async function loadAppointments() {
       const wrap = document.getElementById("tab-appointments");
-      wrap.innerHTML = "";
-      const list = await fetchJson("/api/admin/appointments");
-      for (const a of list) {
-        const doc = a.doctor ? (a.doctor.name + " • " + a.doctor.specialty) : a.doctorId;
-        const usr = a.user ? (a.user.name + " (" + a.user.email + ")") : a.userId;
-        const div = document.createElement("div");
-        div.className = "card";
-        div.innerHTML =
-          '<div class="row">' +
-            '<div>' +
-              '<div style="font-size:1.9rem;font-weight:800;color:var(--black)">' + doc + '</div>' +
-              '<div class="mini">' + usr + '</div>' +
-              '<div class="mini"><i class="fa-regular fa-calendar"></i> ' + a.date + ' &nbsp; <i class="fa-regular fa-clock"></i> ' + a.time + '</div>' +
-              '<div class="mini">Sabab: ' + (a.reason || "—") + '</div>' +
+      wrap.innerHTML = '<div class="muted">Yuklanmoqda...</div>';
+      try {
+        wrap.innerHTML = "";
+        const list = await fetchJson("/api/admin/appointments");
+        for (const a of list) {
+          const doc = a.doctor ? (a.doctor.name + " • " + a.doctor.specialty) : a.doctorId;
+          const usr = a.user ? (a.user.name + " (" + a.user.email + ")") : a.userId;
+          const statusClass = (a.status || "pending");
+          const div = document.createElement("div");
+          div.className = "apt-card";
+          div.innerHTML =
+            '<div class="apt-info">' +
+              '<div class="apt-doctor"><i class="fa-solid fa-user-doctor"></i> ' + doc + '</div>' +
+              '<div class="apt-user"><i class="fa-regular fa-user"></i> ' + usr + '</div>' +
+              '<div class="apt-time"><i class="fa-regular fa-calendar"></i> ' + a.date + ' &nbsp; <i class="fa-regular fa-clock"></i> ' + a.time + '</div>' +
+              (a.reason ? '<div class="apt-reason"><i class="fa-regular fa-comment"></i> ' + a.reason + '</div>' : '') +
             '</div>' +
-            '<div style="display:flex;flex-direction:column;gap:10px;align-items:flex-end;">' +
-              pill(a.status) +
-              '<select class="box" style="min-width:220px;" data-role="status">' +
-                '<option value="pending">kutilmoqda</option>' +
-                '<option value="confirmed">tasdiqlangan</option>' +
-                '<option value="cancelled">bekor qilingan</option>' +
+            '<div class="apt-actions">' +
+              '<span class="apt-status ' + statusClass + '">' + 
+                (statusClass === "pending" ? "⏳ Kutilmoqda" : statusClass === "confirmed" ? "✅ Tasdiqlangan" : "❌ Bekor") + 
+              '</span>' +
+              '<select class="box" style="min-width:180px;font-size:1.4rem;" data-role="status">' +
+                '<option value="pending" ' + (statusClass === "pending" ? "selected" : "") + '>Kutilmoqda</option>' +
+                '<option value="confirmed" ' + (statusClass === "confirmed" ? "selected" : "") + '>Tasdiqlangan</option>' +
+                '<option value="cancelled" ' + (statusClass === "cancelled" ? "selected" : "") + '>Bekor qilingan</option>' +
               '</select>' +
-              '<button class="btn small" data-action="set">yangilash <span class="fas fa-chevron-right"></span></button>' +
-            '</div>' +
-          '</div>';
-        const sel = div.querySelector('[data-role="status"]');
-        sel.value = (a.status || "pending");
-        div.querySelector('[data-action="set"]').addEventListener("click", async () => {
-          try {
-            await fetchJson("/api/admin/appointments/" + encodeURIComponent(a.id), {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ status: sel.value })
-            });
-            loadAppointments();
-          } catch (e) {
-            alert(e.message || "Yangilash amalga oshmadi");
-          }
-        });
-        wrap.appendChild(div);
-      }
-      if (!list.length) {
-        const empty = document.createElement("div");
-        empty.className = "muted";
-        empty.textContent = "Hali yozuvlar yo‘q.";
-        wrap.appendChild(empty);
+              '<button class="btn small" data-action="set"><i class="fa-solid fa-check"></i> Yangilash</button>' +
+            '</div>';
+          const sel = div.querySelector('[data-role="status"]');
+          div.querySelector('[data-action="set"]').addEventListener("click", async () => {
+            try {
+              await fetchJson("/api/admin/appointments/" + encodeURIComponent(a.id), {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: sel.value })
+              });
+              loadAppointments();
+            } catch (e) {
+              alert(e.message || "Yangilash amalga oshmadi");
+            }
+          });
+          wrap.appendChild(div);
+        }
+        if (!list.length) {
+          const empty = document.createElement("div");
+          empty.className = "muted";
+          empty.textContent = "Hali yozuvlar yoʻq.";
+          wrap.appendChild(empty);
+        }
+      } catch(e) {
+        wrap.innerHTML = '<div class="muted">Xatolik: ' + (e.message || "Yuklanmadi") + '</div>';
       }
     }
 
@@ -490,7 +523,12 @@
       setupTabs();
       const me = await requireAdmin();
       if (!me) return;
-      await loadDoctors();
+      try {
+        await loadDoctors();
+      } catch(e) {
+        console.error(e);
+        document.getElementById("tab-doctors").innerHTML = '<div class="muted">Xatolik: ' + (e.message || "Yuklanmadi") + '</div>';
+      }
     })();
   </script>
 </body>

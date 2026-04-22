@@ -206,35 +206,43 @@ async function initBooking() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Smooth section scroll with fixed header offset (prevents "flying away" jumps)
-  const header = document.querySelector(".header");
-  const headerOffset = () => (header ? header.getBoundingClientRect().height : 0) + 12;
+  initThemeToggle();
+  initBooking().catch(() => {});
+  loadDoctorsSection().catch(() => {});
+});
 
-  document.addEventListener("click", (e) => {
-    const a = e.target && e.target.closest ? e.target.closest("a") : null;
-    if (!a) return;
+async function loadDoctorsSection() {
+  const container = document.getElementById("doctors-container");
+  if (!container) return;
 
-    const href = a.getAttribute("href");
-    if (!href) return;
-
-    // Prevent jump-to-top for dummy links
-    if (href === "#") {
-      e.preventDefault();
+  try {
+    const doctors = await fetchJson("/api/doctors");
+    if (!doctors || !doctors.length) {
+      container.innerHTML = '<div class="muted">Hozircha shifokorlar yo‘q</div>';
       return;
     }
 
-    // Smooth scroll for in-page anchors
-    if (href.startsWith("#")) {
-      const id = href.slice(1);
-      const el = document.getElementById(id);
-      if (!el) return;
-      e.preventDefault();
-      const top = el.getBoundingClientRect().top + window.pageYOffset - headerOffset();
-      window.scrollTo({ top, behavior: "smooth" });
-    }
-  });
-
-  initThemeToggle();
-  initBooking().catch(() => {});
-});
+    container.innerHTML = doctors.map(d => {
+      const name = (d.name || '').toLowerCase();
+      const specialty = d.specialty || 'malakali shifokor';
+      const img = d.photo || './img/doc-1.jpg';
+      return `
+        <div class="box">
+          <img src="${img}" alt="${name}">
+          <h3>${d.name || ''}</h3>
+          <span>${specialty}</span>
+          <a href="doctor.html?id=${d.id}" class="btn">batafsil <span class="fas fa-chevron-right"></span></a>
+          <div class="share">
+            ${d.socials?.facebook ? `<a href="${d.socials.facebook}" class="fab fa-facebook"></a>` : ''}
+            ${d.socials?.twitter ? `<a href="${d.socials.twitter}" class="fab fa-twitter"></a>` : ''}
+            ${d.socials?.instagram ? `<a href="${d.socials.instagram}" class="fab fa-instagram"></a>` : ''}
+            ${d.socials?.linkedin ? `<a href="${d.socials.linkedin}" class="fab fa-linkedin"></a>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch(e) {
+    console.error("loadDoctorsSection error:", e);
+  }
+}
 
