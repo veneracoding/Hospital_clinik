@@ -208,9 +208,10 @@ function apiRouter(db) {
   });
 
   // ---------- Admin ----------
+  const uploadBaseDir = process.env.VERCEL ? "/tmp/uploads" : path.join(process.cwd(), "uploads");
   const upload = multer({
     storage: multer.diskStorage({
-      destination: (req, file, cb) => cb(null, path.join(process.cwd(), "uploads")),
+      destination: (req, file, cb) => cb(null, uploadBaseDir),
       filename: (req, file, cb) => {
         const ext = path.extname(file.originalname || "").slice(0, 10) || ".png";
         cb(null, `doc_${Date.now()}_${nanoid(8)}${ext}`);
@@ -378,46 +379,16 @@ function apiRouter(db) {
     ok(res, { appointment: created });
   });
 
-function normalizePhone(v) {
-  const raw = String(v || "").trim();
-  const digits = raw.replace(/[^\d+]/g, "");
-  if (!digits) return "";
-  if (digits.startsWith("+")) return "+" + digits.slice(1).replace(/\D/g, "");
-  return "+" + digits.replace(/\D/g, "");
-}
-
   router.get("/appointments/mine", requireAuth(db), async (req, res) => {
     const s = await db.getState();
-    const user = s.users.find((u) => u.id === req.user.id);
-    const userPhone = user && user.phone ? normalizePhone(user.phone) : "";
-
-    const allUserIdsWithPhone = userPhone
-      ? s.users.filter((u) => normalizePhone(u.phone) === userPhone).map((u) => u.id)
-      : [];
-
-    const telegramChatIdsLinkedToPhone = new Set(
-      (s.telegramLinks || [])
-        .filter((l) => {
-          const linkedUser = s.users.find((u) => u.id === l.userId);
-          return linkedUser && normalizePhone(linkedUser.phone) === userPhone;
-        })
-        .map((l) => l.chatId)
-    );
     const doctorsById = new Map(s.doctors.map((d) => [d.id, d]));
     const mine = s.appointments
-      .filter((a) => {
-        if (a.status === "pending") {
-          if (a.userId === req.user.id) return true;
-          if (allUserIdsWithPhone.includes(a.userId)) return true;
-          if (a.source === "telegram" && a.telegramChatId && telegramChatIdsLinkedToPhone.has(a.telegramChatId)) return true;
-        }
-        return false;
-      })
+      .filter((a) => a.userId === req.user.id)
       .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
       .map((a) => ({
         ...a,
         doctor: doctorsById.get(a.doctorId) ? { ...doctorsById.get(a.doctorId) } : null
-      }))
+      }));
     ok(res, mine);
   });
 

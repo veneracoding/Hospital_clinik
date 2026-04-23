@@ -138,7 +138,7 @@ async function ensureDb() {
     if (!Array.isArray(s.sessions)) s.sessions = [];
     if (!Array.isArray(s.appointments)) s.appointments = [];
     if (!Array.isArray(s.contactMessages)) s.contactMessages = [];
-    if (!Array.isArray(s.telegramLinks)) s.telegramLinks = [];
+    // booking only via website
 
     for (const u of s.users) {
       if (!u.role) u.role = "user";

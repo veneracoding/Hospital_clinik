@@ -7,15 +7,12 @@
   "type": "commonjs",
   "scripts": {
     "dev": "node server.js",
-    "start": "node server.js",
-    "bot": "node bot.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
-    "dotenv": "^17.4.2",
     "express": "^4.21.2",
     "multer": "^2.0.2",
-    "nanoid": "^3.3.11",
-    "node-telegram-bot-api": "^0.67.0"
+    "nanoid": "^5.1.5"
   }
 }
