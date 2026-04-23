@@ -5,6 +5,7 @@ const bcrypt = require("bcryptjs");
 
 const DB_DIR = path.join(__dirname, "..", "data");
 const DB_PATH = path.join(DB_DIR, "store.json");
+const KV_KEY = "hospital_clinik:store:v1";
 
 function nowIso() {
   return new Date().toISOString();
@@ -90,12 +91,29 @@ function defaultSeed() {
   };
 }
 
+function canUseVercelKv() {
+  return Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+}
+
+async function getKvClient() {
+  // Lazy require so local dev doesn't need KV configured
+  const mod = require("@vercel/kv");
+  return mod.kv;
+}
+
 function createDb() {
   let state = null;
   let saving = Promise.resolve();
 
   async function load() {
     if (state) return state;
+    if (canUseVercelKv()) {
+      const kv = await getKvClient();
+      const loaded = await kv.get(KV_KEY);
+      state = loaded ?? defaultSeed();
+      return state;
+    }
+
     const loaded = await readJsonSafe(DB_PATH);
     state = loaded ?? defaultSeed();
     return state;
@@ -104,6 +122,12 @@ function createDb() {
   async function save() {
     const snapshot = state;
     saving = saving.then(async () => {
+      if (canUseVercelKv()) {
+        const kv = await getKvClient();
+        await kv.set(KV_KEY, snapshot);
+        return;
+      }
+
       await ensureDir(DB_DIR);
       await writeJsonAtomic(DB_PATH, snapshot);
     });
