@@ -19,11 +19,22 @@ app.use("/api", apiRouter(db));
 let dbReady = false;
 
 module.exports = async (req, res) => {
+  try {
     if (!dbReady) {
-        // Ensure /tmp/uploads exists for file uploads
-        fs.mkdirSync("/tmp/uploads", { recursive: true });
-        await ensureDb();
-        dbReady = true;
+      // Ensure /tmp/uploads exists for file uploads
+      fs.mkdirSync("/tmp/uploads", { recursive: true });
+      await ensureDb();
+      dbReady = true;
     }
     return app(req, res);
+  } catch (err) {
+    console.error("API_FATAL", err);
+    if (res.headersSent) return;
+    res.status(500).json({
+      ok: false,
+      error: {
+        message: err && err.message ? String(err.message) : "Server error"
+      }
+    });
+  }
 };
