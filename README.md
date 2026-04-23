@@ -29,6 +29,21 @@ Open:
 - `http://localhost:3000/contact.html`
 - `http://localhost:3000/admin.html`
 
+## Telegram bot
+
+1. Copy `.env.example` → `.env`
+2. Set `TELEGRAM_BOT_TOKEN` in `.env`
+3. Run:
+
+```bash
+npm run bot
+```
+
+Bot features:
+- booking via doctor → date → time
+- my appointments
+- reminders (configurable via `TELEGRAM_REMINDERS_MINUTES`)
+
 ## Admin access
 
 On first run, the backend creates a default admin (if no admin exists):

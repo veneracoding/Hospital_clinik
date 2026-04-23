@@ -103,6 +103,26 @@
     .apt-status.confirmed { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
     .apt-status.cancelled { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
     @media (max-width: 600px) { .apt-card { flex-direction: column; } .apt-actions { width: 100%; align-items: stretch; } }
+
+    /* modal */
+    .modal{ position: fixed; inset: 0; display:none; z-index: 3000; }
+    .modal.is-open{ display:block; }
+    .modal__backdrop{ position:absolute; inset:0; background: rgba(0,0,0,.45); backdrop-filter: blur(4px); }
+    .modal__card{
+      position: relative;
+      max-width: 520px;
+      margin: 16vh auto 0;
+      background: var(--surface);
+      border: 1px solid var(--outline);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      animation: modalPop .18s ease-out;
+    }
+    @keyframes modalPop{ from{ transform: translateY(10px); opacity:0;} to{ transform: translateY(0); opacity:1;} }
+    .modal__title{ font-size: 2rem; font-weight: 800; color: var(--text); }
+    .modal__text{ margin-top: 8px; font-size: 1.55rem; color: var(--muted); line-height: 1.5; }
+    .modal__actions{ margin-top: 14px; display:flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
   </style>
 </head>
 <body>
@@ -146,6 +166,19 @@
     </div>
   </div>
 
+  <!-- Delete modal -->
+  <div class="modal" id="deleteModal" aria-hidden="true">
+    <div class="modal__backdrop" data-modal-close></div>
+    <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="deleteTitle">
+      <div class="modal__title" id="deleteTitle">Shifokorni o‘chirish</div>
+      <div class="modal__text" id="deleteText">Haqiqatan ham o‘chirmoqchimisiz?</div>
+      <div class="modal__actions">
+        <button class="btn small" type="button" data-modal-close>Bekor qilish</button>
+        <button class="btn small" type="button" id="deleteConfirmBtn" style="background:#fff1f2;border-color:rgba(244,63,94,.35);color:#b91c1c;">O‘chirish</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
   <script>
     async function fetchJson(url, opts) {
@@ -176,7 +209,6 @@
         return null;
       }
       if (!me.user || me.user.role !== "admin") {
-        try { await fetchJson("/api/auth/logout", { method: "POST" }); } catch (e) {}
         window.location.href = "login.html?next=admin.html&admin=1";
         return null;
       }
@@ -213,6 +245,8 @@
             '<input class="box" name="lastName" placeholder="Familiya" value="' + (lastName || '') + '"/>' +
           '</div>' +
           '<input class="box" name="specialty" placeholder="Mutaxassislik" value="' + (d.specialty || '') + '"/>' +
+          '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:10px;">Biografiya</div>' +
+          '<textarea class="box" name="bio" placeholder="Shifokor haqida qisqacha ma’lumot">' + (d.bio || '') + '</textarea>' +
           '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:10px;">Ta\'lim</div>' +
           '<textarea class="box" name="education" placeholder="Ta\'lim joylari">' + (d.education || '') + '</textarea>' +
           '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;margin-top:10px;">Tajriba</div>' +
@@ -260,25 +294,28 @@
       }
 
       div.querySelector('[data-action="delete"]').addEventListener("click", async () => {
-        if (!confirm("Shifokorni o‘chirishni xohlaysizmi?")) return;
-        try {
+        openDeleteModal(d, async () => {
           await fetchJson("/api/admin/doctors/" + encodeURIComponent(d.id), { method: "DELETE" });
           div.remove();
-        } catch (e) {
-          alert(e.message || "O‘chirish amalga oshmadi");
-        }
+        });
       });
 
       div.querySelector('[data-action="save"]').addEventListener("click", async () => {
         showMsg("Saqlanmoqda...", "ok");
         try {
-          const firstName = div.querySelector('input[name="firstName"]').value.trim();
-          const lastName = div.querySelector('input[name="lastName"]').value.trim();
+          const getVal = (sel) => {
+            const el = div.querySelector(sel);
+            return el && typeof el.value === "string" ? el.value.trim() : "";
+          };
+
+          const firstName = getVal('input[name="firstName"]');
+          const lastName = getVal('input[name="lastName"]');
           const name = (firstName + " " + lastName).trim();
-          const specialty = div.querySelector('input[name="specialty"]').value.trim();
-          const bio = div.querySelector('textarea[name="bio"]').value.trim();
-          const photoUrlInput = div.querySelector('input[name="photo"]').value.trim();
-          const photoFile = div.querySelector('input[name="photoFile"]').files[0];
+          const specialty = getVal('input[name="specialty"]');
+          const bio = getVal('textarea[name="bio"]');
+          const photoUrlInput = getVal('input[name="photo"]');
+          const photoEl = div.querySelector('input[name="photoFile"]');
+          const photoFile = photoEl && photoEl.files ? photoEl.files[0] : null;
 
           let photo = photoUrlInput;
           if (photoFile) {
@@ -290,18 +327,19 @@
 
           const patch = {
             name, firstName, lastName, specialty,
-            education: div.querySelector('textarea[name="education"]').value.trim(),
-            experience: div.querySelector('textarea[name="experience"]').value.trim(),
-            achievements: div.querySelector('textarea[name="achievements"]').value.trim(),
-            languages: div.querySelector('input[name="languages"]').value.trim(),
-            workStart: div.querySelector('input[name="workStart"]').value.trim(),
-            workEnd: div.querySelector('input[name="workEnd"]').value.trim(),
+            bio,
+            education: getVal('textarea[name="education"]'),
+            experience: getVal('textarea[name="experience"]'),
+            achievements: getVal('textarea[name="achievements"]'),
+            languages: getVal('input[name="languages"]'),
+            workStart: getVal('input[name="workStart"]'),
+            workEnd: getVal('input[name="workEnd"]'),
             photo,
             socials: {
-              facebook: div.querySelector('input[name="facebook"]').value.trim(),
-              twitter: div.querySelector('input[name="twitter"]').value.trim(),
-              instagram: div.querySelector('input[name="instagram"]').value.trim(),
-              linkedin: div.querySelector('input[name="linkedin"]').value.trim()
+              facebook: getVal('input[name="facebook"]'),
+              twitter: getVal('input[name="twitter"]'),
+              instagram: getVal('input[name="instagram"]'),
+              linkedin: getVal('input[name="linkedin"]')
             }
           };
 
@@ -325,6 +363,40 @@
 
       return div;
     }
+
+    // modal helpers
+    const deleteModal = document.getElementById("deleteModal");
+    const deleteText = document.getElementById("deleteText");
+    const deleteConfirmBtn = document.getElementById("deleteConfirmBtn");
+    let deleteAction = null;
+
+    function openDeleteModal(doc, onConfirm) {
+      deleteAction = onConfirm;
+      deleteText.textContent = `“${doc.name || "Shifokor"}” ni o‘chirishni tasdiqlaysizmi?`;
+      deleteModal.setAttribute("aria-hidden", "false");
+      deleteModal.classList.add("is-open");
+    }
+
+    function closeDeleteModal() {
+      deleteModal.setAttribute("aria-hidden", "true");
+      deleteModal.classList.remove("is-open");
+      deleteAction = null;
+    }
+
+    deleteModal.addEventListener("click", (e) => {
+      if (e.target && e.target.hasAttribute && e.target.hasAttribute("data-modal-close")) closeDeleteModal();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && deleteModal.classList.contains("is-open")) closeDeleteModal();
+    });
+    deleteConfirmBtn.addEventListener("click", async () => {
+      try {
+        if (deleteAction) await deleteAction();
+        closeDeleteModal();
+      } catch (e) {
+        alert(e && e.message ? e.message : "O‘chirish amalga oshmadi");
+      }
+    });
 
     function createDoctorCard(onCreated) {
       const div = document.createElement("div");

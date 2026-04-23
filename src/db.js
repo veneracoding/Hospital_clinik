@@ -138,14 +138,28 @@ async function ensureDb() {
     if (!Array.isArray(s.sessions)) s.sessions = [];
     if (!Array.isArray(s.appointments)) s.appointments = [];
     if (!Array.isArray(s.contactMessages)) s.contactMessages = [];
+    if (!Array.isArray(s.telegramLinks)) s.telegramLinks = [];
 
     for (const u of s.users) {
       if (!u.role) u.role = "user";
+      if (!u.phone) u.phone = "";
     }
 
     for (const d of s.doctors) {
       if (!d.bio) d.bio = "";
       if (!d.socials) d.socials = { facebook: "", twitter: "", instagram: "", linkedin: "" };
+      if (!d.education) d.education = "";
+      if (!d.experience) d.experience = "";
+      if (!d.achievements) d.achievements = "";
+      if (!d.languages) d.languages = "";
+      if (!d.workStart) d.workStart = "09:00";
+      if (!d.workEnd) d.workEnd = "17:00";
+    }
+
+    for (const a of s.appointments) {
+      if (!a.status) a.status = "pending";
+      if (!a.source) a.source = "web";
+      if (!a.reminders) a.reminders = { sent: [] };
     }
 
     const hasAdmin = s.users.some((u) => u.role === "admin");

@@ -145,7 +145,7 @@ function apiRouter(db) {
   });
 
   router.post("/auth/register", async (req, res) => {
-    const { name, email, password } = req.body || {};
+    const { name, email, password, phone } = req.body || {};
     if (typeof name !== "string" || name.trim().length < 2) return fail(res, 400, "Name is required");
     if (!isEmail(email)) return fail(res, 400, "Email is invalid");
     if (typeof password !== "string" || password.length < 6) return fail(res, 400, "Password must be 6+ chars");
@@ -160,6 +160,7 @@ function apiRouter(db) {
         id: `usr_${nanoid(10)}`,
         name: name.trim(),
         email: emailNorm,
+        phone: typeof phone === "string" ? phone.trim() : "",
         passwordHash,
         createdAt: nowIso()
       };
@@ -167,7 +168,7 @@ function apiRouter(db) {
     });
 
     if (!createdUser) return fail(res, 409, "Email already registered");
-    ok(res, { user: { id: createdUser.id, name: createdUser.name, email: createdUser.email } });
+    ok(res, { user: { id: createdUser.id, name: createdUser.name, email: createdUser.email, phone: createdUser.phone || "" } });
   });
 
   router.post("/auth/login", async (req, res) => {
@@ -188,7 +189,7 @@ function apiRouter(db) {
     });
 
     setCookie(res, "sid", sid, { httpOnly: true, sameSite: "Lax", path: "/", maxAge: 60 * 60 * 24 * 7 });
-    ok(res, { user: { id: user.id, name: user.name, email: user.email, role: user.role || "user" } });
+    ok(res, { user: { id: user.id, name: user.name, email: user.email, phone: user.phone || "", role: user.role || "user" } });
   });
 
   router.post("/auth/logout", async (req, res) => {
@@ -229,7 +230,7 @@ function apiRouter(db) {
   });
 
   router.post("/admin/doctors", requireAdmin(db), async (req, res) => {
-    const { name, specialty, photo, bio, socials } = req.body || {};
+    const { name, specialty, photo, bio, socials, education, experience, achievements, languages, workStart, workEnd } = req.body || {};
     if (typeof name !== "string" || name.trim().length < 2) return fail(res, 400, "name is required");
     if (typeof specialty !== "string" || specialty.trim().length < 2) return fail(res, 400, "specialty is required");
 
@@ -239,6 +240,12 @@ function apiRouter(db) {
       specialty: specialty.trim(),
       photo: typeof photo === "string" ? photo.trim() : "",
       bio: typeof bio === "string" ? bio.trim() : "",
+      education: typeof education === "string" ? education.trim() : "",
+      experience: typeof experience === "string" ? experience.trim() : "",
+      achievements: typeof achievements === "string" ? achievements.trim() : "",
+      languages: typeof languages === "string" ? languages.trim() : "",
+      workStart: typeof workStart === "string" && workStart.trim() ? workStart.trim() : "09:00",
+      workEnd: typeof workEnd === "string" && workEnd.trim() ? workEnd.trim() : "17:00",
       socials: {
         facebook: socials && typeof socials.facebook === "string" ? socials.facebook.trim() : "",
         twitter: socials && typeof socials.twitter === "string" ? socials.twitter.trim() : "",
@@ -265,6 +272,12 @@ function apiRouter(db) {
       if (typeof patch.specialty === "string" && patch.specialty.trim().length >= 2) d.specialty = patch.specialty.trim();
       if (typeof patch.photo === "string") d.photo = patch.photo.trim();
       if (typeof patch.bio === "string") d.bio = patch.bio.trim();
+      if (typeof patch.education === "string") d.education = patch.education.trim();
+      if (typeof patch.experience === "string") d.experience = patch.experience.trim();
+      if (typeof patch.achievements === "string") d.achievements = patch.achievements.trim();
+      if (typeof patch.languages === "string") d.languages = patch.languages.trim();
+      if (typeof patch.workStart === "string" && patch.workStart.trim()) d.workStart = patch.workStart.trim();
+      if (typeof patch.workEnd === "string" && patch.workEnd.trim()) d.workEnd = patch.workEnd.trim();
       if (patch.socials && typeof patch.socials === "object") {
         d.socials = d.socials || { facebook: "", twitter: "", instagram: "", linkedin: "" };
         for (const k of ["facebook", "twitter", "instagram", "linkedin"]) {
@@ -365,16 +378,45 @@ function apiRouter(db) {
     ok(res, { appointment: created });
   });
 
+function normalizePhone(v) {
+  const raw = String(v || "").trim();
+  const digits = raw.replace(/[^\d+]/g, "");
+  if (!digits) return "";
+  if (digits.startsWith("+")) return "+" + digits.slice(1).replace(/\D/g, "");
+  return "+" + digits.replace(/\D/g, "");
+}
+
   router.get("/appointments/mine", requireAuth(db), async (req, res) => {
     const s = await db.getState();
+    const user = s.users.find((u) => u.id === req.user.id);
+    const userPhone = user && user.phone ? normalizePhone(user.phone) : "";
+
+    const allUserIdsWithPhone = userPhone
+      ? s.users.filter((u) => normalizePhone(u.phone) === userPhone).map((u) => u.id)
+      : [];
+
+    const telegramChatIdsLinkedToPhone = new Set(
+      (s.telegramLinks || [])
+        .filter((l) => {
+          const linkedUser = s.users.find((u) => u.id === l.userId);
+          return linkedUser && normalizePhone(linkedUser.phone) === userPhone;
+        })
+        .map((l) => l.chatId)
+    );
     const doctorsById = new Map(s.doctors.map((d) => [d.id, d]));
     const mine = s.appointments
-      .filter((a) => a.userId === req.user.id)
+      .filter((a) => {
+        if (a.status === "confirmed" || a.status === "cancelled") return false;
+        if (a.userId === req.user.id) return true;
+        if (allUserIdsWithPhone.includes(a.userId)) return true;
+        if (a.source === "telegram" && a.telegramChatId && telegramChatIdsLinkedToPhone.has(a.telegramChatId)) return true;
+        return false;
+      })
       .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
-      .map((a) => ({
-        ...a,
-        doctor: doctorsById.get(a.doctorId) ? { ...doctorsById.get(a.doctorId) } : null
-      }));
+      .map((a) => {
+        const doc = doctorsById.get(a.doctorId);
+        return { ...a, doctor: doc ? { ...doc } : null };
+      });
     ok(res, mine);
   });
 

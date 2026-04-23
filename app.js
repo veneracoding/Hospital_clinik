@@ -30,24 +30,29 @@ const themeIcons = {
   light: "fa-sun",
   dark: "fa-moon",
   coffee: "fa-mug-hot",
-  blue: "fa-water",
+  blue: "fa-droplet",
   purple: "fa-wand-magic-sparkles",
   pink: "fa-heart",
-  orange: "fa-flame"
+  orange: "fa-fire"
 };
+
+function initAdminLinkVisibility() {
+  const adminLinks = Array.from(document.querySelectorAll('a[href="admin.html"]'));
+  for (const a of adminLinks) a.style.display = "none";
+
+  fetchJson("/api/me")
+    .then((me) => {
+      if (me && me.user && me.user.role === "admin") {
+        for (const a of adminLinks) a.style.display = "";
+      }
+    })
+    .catch(() => {});
+}
 
 function initThemeToggle() {
   const root = document.documentElement;
   const btn = document.getElementById("themeToggle");
   const thumb = btn ? btn.querySelector(".theme-toggle__thumb") : null;
-
-  const getPreferred = () => {
-    try {
-      return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    } catch (e) {
-      return "light";
-    }
-  };
 
   const getSaved = () => {
     try { return localStorage.getItem("theme"); } catch (e) { return null; }
@@ -55,38 +60,68 @@ function initThemeToggle() {
 
   const setTheme = (theme) => {
     root.removeAttribute("data-theme");
-    if (theme !== "light") root.setAttribute("data-theme", theme);
-    try { localStorage.setItem("theme", theme); } catch (e) {}
+    if (theme && theme !== "light") root.setAttribute("data-theme", theme);
+    try { localStorage.setItem("theme", theme || "light"); } catch (e) {}
     if (btn) {
       const icon = themeIcons[theme] || "fa-sun";
-      btn.setAttribute("aria-label", theme + " mavzu");
-      if (thumb) thumb.innerHTML = '<i class="fa-regular ' + icon + '"></i>';
+      btn.setAttribute("aria-label", "Mavzu tanlash");
+      if (thumb) thumb.innerHTML = '<i class="fa-solid ' + icon + '"></i>';
     }
-  };
-
-  const getCurrent = () => {
-    if (root.hasAttribute("data-theme")) {
-      return root.getAttribute("data-theme");
-    }
-    return "light";
-  };
-
-  const getNext = () => {
-    const current = getCurrent();
-    const idx = themes.indexOf(current);
-    if (idx === -1) return "dark";
-    return themes[(idx + 1) % themes.length];
   };
 
   const initial = getSaved() || "light";
   setTheme(initial);
 
-  if (btn) {
-    btn.addEventListener("click", () => {
-      const nextTheme = getNext();
-      setTheme(nextTheme);
-    });
-  }
+  if (!btn) return;
+
+  const picker = document.createElement("div");
+  picker.className = "theme-picker";
+  picker.setAttribute("data-open", "0");
+  picker.innerHTML = themes.map((t) => {
+    const icon = themeIcons[t] || "fa-sun";
+    const label =
+      t === "light" ? "Yorug‘" :
+      t === "dark" ? "Qorong‘i" :
+      t === "coffee" ? "Kofe" :
+      t === "blue" ? "Ko‘k" :
+      t === "purple" ? "Siyohrang" :
+      t === "pink" ? "Pushti" :
+      t === "orange" ? "To‘q sariq" : t;
+    return (
+      '<button type="button" class="theme-picker__item" data-theme="' + t + '">' +
+        '<span class="theme-picker__dot" data-theme="' + t + '"></span>' +
+        '<i class="fa-solid ' + icon + '"></i>' +
+        '<span>' + label + '</span>' +
+      '</button>'
+    );
+  }).join("");
+
+  const host = btn.parentElement || document.body;
+  host.style.position = host.style.position || "relative";
+  host.appendChild(picker);
+
+  const close = () => picker.setAttribute("data-open", "0");
+  const toggle = () => picker.setAttribute("data-open", picker.getAttribute("data-open") === "1" ? "0" : "1");
+
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    toggle();
+  });
+
+  picker.addEventListener("click", (e) => {
+    const item = e.target && e.target.closest ? e.target.closest(".theme-picker__item") : null;
+    if (!item) return;
+    const t = item.getAttribute("data-theme");
+    setTheme(t);
+    close();
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!picker.contains(e.target) && e.target !== btn && !(btn.contains && btn.contains(e.target))) close();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") close();
+  });
 }
 
 async function initBooking() {
@@ -134,6 +169,15 @@ async function initBooking() {
     opt.textContent = d.name + " • " + d.specialty;
     doctorSel.appendChild(opt);
   }
+
+  // Preselect doctor from URL (?doctorId=...)
+  try {
+    const u = new URL(window.location.href);
+    const pre = u.searchParams.get("doctorId");
+    if (pre) {
+      doctorSel.value = pre;
+    }
+  } catch (e) {}
 
   async function loadSlots() {
     const doctorId = doctorSel.value;
@@ -207,6 +251,7 @@ async function initBooking() {
 
 document.addEventListener("DOMContentLoaded", () => {
   initThemeToggle();
+  initAdminLinkVisibility();
   initBooking().catch(() => {});
   loadDoctorsSection().catch(() => {});
 });
@@ -226,11 +271,14 @@ async function loadDoctorsSection() {
       const name = (d.name || '').toLowerCase();
       const specialty = d.specialty || 'malakali shifokor';
       const img = d.photo || './img/doc-1.jpg';
+      const bio = (d.bio || '').trim();
+      const bioHtml = bio ? `<p class="doc-bio">${bio.length > 120 ? bio.slice(0, 120) + "..." : bio}</p>` : '';
       return `
         <div class="box">
           <img src="${img}" alt="${name}">
           <h3>${d.name || ''}</h3>
           <span>${specialty}</span>
+          ${bioHtml}
           <a href="doctor.html?id=${d.id}" class="btn">batafsil <span class="fas fa-chevron-right"></span></a>
           <div class="share">
             ${d.socials?.facebook ? `<a href="${d.socials.facebook}" class="fab fa-facebook"></a>` : ''}

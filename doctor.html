@@ -66,7 +66,7 @@
       </div>
 
       <div class="chips">
-        <div class="chip"><i class="fa-regular fa-clock"></i> Du–Ju, 09:00–17:00</div>
+        <div class="chip" id="workTimeChip"><i class="fa-regular fa-clock"></i> Du–Ju, 09:00–17:00</div>
         <div class="chip"><i class="fa-solid fa-location-dot"></i> Medcare klinikasi</div>
         <div class="chip"><i class="fa-solid fa-star"></i> Tajribali mutaxassis</div>
       </div>
@@ -75,8 +75,10 @@
         Bu yerda shifokor biografiyasi ko‘rinadi. Ushbu matnni haqiqiy ma’lumotlar (ta’lim, tajriba, yutuqlar, tillar) bilan almashtiring.
       </p>
 
+      <div id="details" style="display:grid;gap:12px;margin-top:14px;"></div>
+
       <div class="actions">
-        <a class="btn" href="index.html#book">qabulga yozilish <span class="fas fa-chevron-right"></span></a>
+        <a class="btn" id="bookLink" href="index.html#book">qabulga yozilish <span class="fas fa-chevron-right"></span></a>
         <a class="btn" href="index.html#doctors">orqaga <span class="fas fa-chevron-right"></span></a>
       </div>
     </div>
@@ -112,6 +114,45 @@
 
       if (d && typeof d.bio === "string" && d.bio.trim()) {
         document.getElementById("bio").textContent = d.bio.trim();
+      }
+
+      if (d && (d.workStart || d.workEnd)) {
+        const ws = d.workStart || "09:00";
+        const we = d.workEnd || "17:00";
+        const chip = document.getElementById("workTimeChip");
+        if (chip) chip.innerHTML = '<i class="fa-regular fa-clock"></i> Du–Ju, ' + ws + "–" + we;
+      }
+
+      const bookLink = document.getElementById("bookLink");
+      if (bookLink && d && d.id) {
+        bookLink.href = "index.html?doctorId=" + encodeURIComponent(d.id) + "#book";
+      }
+
+      const details = document.getElementById("details");
+      const blocks = [];
+      const addBlock = (title, icon, text) => {
+        const t = (text || "").trim();
+        if (!t) return;
+        const items = t.split("\n").map(x => x.trim()).filter(Boolean);
+        const li = items.map(x => `<div style="display:flex;gap:10px;align-items:flex-start;"><i class="fa-solid fa-check" style="color:var(--green);margin-top:3px;"></i><div style="font-size:1.55rem;color:var(--text);line-height:1.5;">${x}</div></div>`).join("");
+        blocks.push(`
+          <div style="background:var(--surface);border:1px solid var(--outline);border-radius:16px;padding:16px;box-shadow:var(--shadow);">
+            <div style="display:flex;gap:10px;align-items:center;font-size:1.8rem;font-weight:800;color:var(--text);">
+              <i class="fa-solid ${icon}" style="color:var(--green);"></i> ${title}
+            </div>
+            <div style="margin-top:10px;display:grid;gap:8px;">${li}</div>
+          </div>
+        `);
+      };
+
+      addBlock("Ta’lim", "fa-graduation-cap", d.education);
+      addBlock("Tajriba", "fa-briefcase", d.experience);
+      addBlock("Yutuqlar", "fa-award", d.achievements);
+      addBlock("Tillar", "fa-language", d.languages);
+
+      if (details) {
+        details.innerHTML = blocks.join("");
+        if (!blocks.length) details.style.display = "none";
       }
     })().catch(() => {
       // Keep page usable even if API is unavailable

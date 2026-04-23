@@ -105,6 +105,7 @@
       <div class="error" id="errorMsg">⚠️ Ro‘yxatdan o‘tish amalga oshmadi.</div>
       <div class="ok" id="okMsg">✅ Akkaunt yaratildi. Endi kirishingiz mumkin.</div>
       <input type="text" id="name" placeholder="Ism-familiya" required />
+      <input type="tel" id="phone" placeholder="Telefon raqam (masalan: +998901234567)" required />
       <input type="email" id="email" placeholder="Emailingizni kiriting" required />
       <input type="password" id="password" placeholder="Parol yarating (kamida 6)" required />
       <button type="submit">Akkaunt yaratish</button>
@@ -135,6 +136,7 @@
           method: "POST",
           body: JSON.stringify({
             name: document.getElementById("name").value.trim(),
+            phone: document.getElementById("phone").value.trim(),
             email: document.getElementById("email").value.trim(),
             password: document.getElementById("password").value
           })
