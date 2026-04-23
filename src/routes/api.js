@@ -203,6 +203,10 @@ function apiRouter(db) {
     ok(res, { loggedOut: true });
   });
 
+  router.get("/auth/me", requireAuth(db), async (req, res) => {
+    ok(res, { user: req.user });
+  });
+
   router.get("/me", requireAuth(db), async (req, res) => {
     ok(res, { user: req.user });
   });
@@ -336,6 +340,47 @@ function apiRouter(db) {
     });
     if (!updated) return fail(res, 404, "Appointment not found");
     ok(res, { appointment: updated });
+  });
+
+  router.post("/appointments/book", requireAuth(db), async (req, res) => {
+    const { doctorId, date, time, reason } = req.body || {};
+    const dateNorm = normalizeDate(date);
+    const timeNorm = normalizeTime(time);
+    if (typeof doctorId !== "string" || !doctorId) return fail(res, 400, "doctorId is required");
+    if (!dateNorm) return fail(res, 400, "date is required (YYYY-MM-DD)");
+    if (!timeNorm) return fail(res, 400, "time is required (HH:MM)");
+
+    const reasonNorm = typeof reason === "string" ? reason.trim().slice(0, 300) : "";
+
+    let created = null;
+    await db.update((s) => {
+      const doctor = s.doctors.find((d) => d.id === doctorId);
+      if (!doctor) return;
+
+      const clash = s.appointments.some(
+        (a) =>
+          a.doctorId === doctorId &&
+          a.date === dateNorm &&
+          a.time === timeNorm &&
+          a.status !== "cancelled"
+      );
+      if (clash) return;
+
+      created = {
+        id: `apt_${nanoid(10)}`,
+        userId: req.user.id,
+        doctorId,
+        date: dateNorm,
+        time: timeNorm,
+        reason: reasonNorm,
+        status: "pending",
+        createdAt: nowIso()
+      };
+      s.appointments.push(created);
+    });
+
+    if (!created) return fail(res, 409, "This time is already taken (or doctor not found)");
+    ok(res, { appointment: created });
   });
 
   router.post("/appointments", requireAuth(db), async (req, res) => {
