@@ -3,7 +3,9 @@ const path = require("path");
 const { nanoid } = require("nanoid");
 const bcrypt = require("bcryptjs");
 
-const DB_DIR = path.join(__dirname, "..", "data");
+const IS_VERCEL = Boolean(process.env.VERCEL);
+// On Vercel, the project filesystem is read-only; /tmp is writable (but ephemeral).
+const DB_DIR = IS_VERCEL ? "/tmp" : path.join(__dirname, "..", "data");
 const DB_PATH = path.join(DB_DIR, "store.json");
 const KV_KEY = "hospital_clinik:store:v1";
 
