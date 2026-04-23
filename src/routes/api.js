@@ -417,7 +417,7 @@ function normalizePhone(v) {
       .map((a) => ({
         ...a,
         doctor: doctorsById.get(a.doctorId) ? { ...doctorsById.get(a.doctorId) } : null
-      })));
+      }))
     ok(res, mine);
   });
 
