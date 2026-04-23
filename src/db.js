@@ -1,6 +1,6 @@
 const fs = require("fs/promises");
 const path = require("path");
-const { nanoid } = require("nanoid");
+const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 
 const IS_VERCEL = Boolean(process.env.VERCEL);
@@ -8,6 +8,11 @@ const IS_VERCEL = Boolean(process.env.VERCEL);
 const DB_DIR = IS_VERCEL ? "/tmp" : path.join(__dirname, "..", "data");
 const DB_PATH = path.join(DB_DIR, "store.json");
 const KV_KEY = "hospital_clinik:store:v1";
+
+function rid(size = 10) {
+  // URL-safe-ish id; good enough for this project
+  return crypto.randomBytes(Math.ceil(size * 0.75)).toString("base64url").slice(0, size);
+}
 
 function nowIso() {
   return new Date().toISOString();
@@ -24,7 +29,7 @@ async function readJsonSafe(filePath) {
 }
 
 async function writeJsonAtomic(filePath, value) {
-  const tmpPath = `${filePath}.${nanoid(8)}.tmp`;
+  const tmpPath = `${filePath}.${rid(8)}.tmp`;
   await fs.writeFile(tmpPath, JSON.stringify(value, null, 2), "utf8");
   await fs.rename(tmpPath, filePath);
 }
@@ -192,7 +197,7 @@ async function ensureDb() {
     if (!hasAdmin) {
       // Create a default admin if none exists
       s.users.push({
-        id: `usr_${nanoid(10)}`,
+        id: `usr_${rid(10)}`,
         name: "Admin",
         email: adminEmail,
         passwordHash: bcrypt.hashSync(adminPassword, 10),

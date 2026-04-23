@@ -1,8 +1,12 @@
 const bcrypt = require("bcryptjs");
-const { nanoid } = require("nanoid");
+const crypto = require("crypto");
 const { nowIso } = require("../db");
 const multer = require("multer");
 const path = require("path");
+
+function rid(size = 10) {
+  return crypto.randomBytes(Math.ceil(size * 0.75)).toString("base64url").slice(0, size);
+}
 
 function ok(res, data) {
   res.json({ ok: true, data });
@@ -133,7 +137,7 @@ function apiRouter(db) {
 
     await db.update((s) => {
       s.contactMessages.push({
-        id: `msg_${nanoid(10)}`,
+        id: `msg_${rid(10)}`,
         name: name.trim(),
         email: email.trim().toLowerCase(),
         phone: phone.trim(),
@@ -157,7 +161,7 @@ function apiRouter(db) {
     await db.update((s) => {
       if (s.users.some((u) => u.email === emailNorm)) return;
       createdUser = {
-        id: `usr_${nanoid(10)}`,
+        id: `usr_${rid(10)}`,
         name: name.trim(),
         email: emailNorm,
         phone: typeof phone === "string" ? phone.trim() : "",
@@ -183,7 +187,7 @@ function apiRouter(db) {
     const okPwd = await bcrypt.compare(password, user.passwordHash);
     if (!okPwd) return fail(res, 401, "Invalid email or password");
 
-    const sid = `sid_${nanoid(18)}`;
+    const sid = `sid_${rid(18)}`;
     await db.update((st) => {
       st.sessions.push({ id: sid, userId: user.id, createdAt: nowIso() });
     });
@@ -218,7 +222,7 @@ function apiRouter(db) {
       destination: (req, file, cb) => cb(null, uploadBaseDir),
       filename: (req, file, cb) => {
         const ext = path.extname(file.originalname || "").slice(0, 10) || ".png";
-        cb(null, `doc_${Date.now()}_${nanoid(8)}${ext}`);
+        cb(null, `doc_${Date.now()}_${rid(8)}${ext}`);
       }
     }),
     limits: { fileSize: 5 * 1024 * 1024 }
@@ -240,7 +244,7 @@ function apiRouter(db) {
     if (typeof specialty !== "string" || specialty.trim().length < 2) return fail(res, 400, "specialty is required");
 
     const created = {
-      id: `doc_${nanoid(8)}`,
+      id: `doc_${rid(8)}`,
       name: name.trim(),
       specialty: specialty.trim(),
       photo: typeof photo === "string" ? photo.trim() : "",
@@ -367,7 +371,7 @@ function apiRouter(db) {
       if (clash) return;
 
       created = {
-        id: `apt_${nanoid(10)}`,
+        id: `apt_${rid(10)}`,
         userId: req.user.id,
         doctorId,
         date: dateNorm,
@@ -408,7 +412,7 @@ function apiRouter(db) {
       if (clash) return;
 
       created = {
-        id: `apt_${nanoid(10)}`,
+        id: `apt_${rid(10)}`,
         userId: req.user.id,
         doctorId,
         date: dateNorm,
