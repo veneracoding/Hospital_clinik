@@ -71,15 +71,12 @@ async function ensureTelegramUser(chat, phoneNumber) {
     const existingLink = (s.telegramLinks || []).find((l) => l.chatId === chatId);
     if (existingLink) {
       userId = existingLink.userId;
-      if (phone && !s.users.find(u => u.id === userId).phone) {
-        s.users.find(u => u.id === userId).phone = phone;
-      }
       return;
     }
 
     let user = null;
     if (phone) {
-      user = s.users.find((u) => normalizePhone(u.phone || "") === phone) || null;
+      user = s.users.find((u) => String(u.phone || "") === phone) || null;
     }
     if (!user) user = s.users.find((u) => u.email === email);
     if (!user) {

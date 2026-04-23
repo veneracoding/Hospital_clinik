@@ -406,17 +406,18 @@ function normalizePhone(v) {
     const doctorsById = new Map(s.doctors.map((d) => [d.id, d]));
     const mine = s.appointments
       .filter((a) => {
-        if (a.status === "confirmed" || a.status === "cancelled") return false;
-        if (a.userId === req.user.id) return true;
-        if (allUserIdsWithPhone.includes(a.userId)) return true;
-        if (a.source === "telegram" && a.telegramChatId && telegramChatIdsLinkedToPhone.has(a.telegramChatId)) return true;
+        if (a.status === "pending") {
+          if (a.userId === req.user.id) return true;
+          if (allUserIdsWithPhone.includes(a.userId)) return true;
+          if (a.source === "telegram" && a.telegramChatId && telegramChatIdsLinkedToPhone.has(a.telegramChatId)) return true;
+        }
         return false;
       })
       .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
-      .map((a) => {
-        const doc = doctorsById.get(a.doctorId);
-        return { ...a, doctor: doc ? { ...doc } : null };
-      });
+      .map((a) => ({
+        ...a,
+        doctor: doctorsById.get(a.doctorId) ? { ...doctorsById.get(a.doctorId) } : null
+      })));
     ok(res, mine);
   });
 
