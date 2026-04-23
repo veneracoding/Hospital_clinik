@@ -15,7 +15,11 @@
     "dotenv": "^17.4.2",
     "express": "^4.21.2",
     "multer": "^2.0.2",
+<<<<<<< HEAD
     "nanoid": "^5.1.5",
     "node-telegram-bot-api": "^0.67.0"
+=======
+    "nanoid": "^3.3.11"
+>>>>>>> ab3f2a62b30ed175b6f3e372b7e5fc30abe3e4bf
   }
 }
