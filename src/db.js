@@ -108,12 +108,43 @@ async function getKvClient() {
   return mod.kv;
 }
 
+function canUseRedisUrl() {
+  return Boolean(process.env.REDIS_URL);
+}
+
+let redisClientPromise = null;
+async function getRedisClient() {
+  if (!redisClientPromise) {
+    redisClientPromise = (async () => {
+      const { createClient } = require("redis");
+      const client = createClient({ url: process.env.REDIS_URL });
+      client.on("error", () => {});
+      await client.connect();
+      return client;
+    })();
+  }
+  return await redisClientPromise;
+}
+
 function createDb() {
   let state = null;
   let saving = Promise.resolve();
 
   async function load() {
     if (state) return state;
+    if (canUseRedisUrl()) {
+      const redis = await getRedisClient();
+      const raw = await redis.get(KV_KEY);
+      if (raw) {
+        try {
+          state = JSON.parse(raw);
+          return state;
+        } catch (_) {}
+      }
+      state = defaultSeed();
+      await redis.set(KV_KEY, JSON.stringify(state));
+      return state;
+    }
     if (canUseVercelKv()) {
       const kv = await getKvClient();
       const loaded = await kv.get(KV_KEY);
@@ -129,6 +160,11 @@ function createDb() {
   async function save() {
     const snapshot = state;
     saving = saving.then(async () => {
+      if (canUseRedisUrl()) {
+        const redis = await getRedisClient();
+        await redis.set(KV_KEY, JSON.stringify(snapshot));
+        return;
+      }
       if (canUseVercelKv()) {
         const kv = await getKvClient();
         await kv.set(KV_KEY, snapshot);

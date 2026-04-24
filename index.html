@@ -430,7 +430,14 @@
 
 
 <!-- custom js file link -->
-<script type='text/javascript'>document.addEventListener('DOMContentLoaded', function () {window.setTimeout(document.querySelector('svg').classList.add('animated'),1000);})</script>
+<script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function () {
+    window.setTimeout(function () {
+      var svg = document.querySelector("svg");
+      if (svg) svg.classList.add("animated");
+    }, 1000);
+  });
+</script>
 <script src="app.js"></script>
 
 </body>
