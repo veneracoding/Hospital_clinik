@@ -54,11 +54,27 @@ function setCookie(res, name, value, opts = {}) {
   if (opts.sameSite) parts.push(`SameSite=${opts.sameSite}`);
   if (opts.path) parts.push(`Path=${opts.path}`);
   if (opts.maxAge != null) parts.push(`Max-Age=${opts.maxAge}`);
-  res.setHeader("Set-Cookie", parts.join("; "));
+  const next = parts.join("; ");
+  const prev = res.getHeader("Set-Cookie");
+  if (!prev) {
+    res.setHeader("Set-Cookie", next);
+  } else if (Array.isArray(prev)) {
+    res.setHeader("Set-Cookie", [...prev, next]);
+  } else {
+    res.setHeader("Set-Cookie", [String(prev), next]);
+  }
 }
 
 function clearCookie(res, name) {
-  res.setHeader("Set-Cookie", `${name}=; Path=/; Max-Age=0`);
+  const next = `${name}=; Path=/; Max-Age=0`;
+  const prev = res.getHeader("Set-Cookie");
+  if (!prev) {
+    res.setHeader("Set-Cookie", next);
+  } else if (Array.isArray(prev)) {
+    res.setHeader("Set-Cookie", [...prev, next]);
+  } else {
+    res.setHeader("Set-Cookie", [String(prev), next]);
+  }
 }
 
 function buildTimeSlots() {
@@ -198,22 +214,14 @@ function apiRouter(db) {
       st.sessions.push({ id: sid, userId: user.id, createdAt: nowIso() });
     });
 
-    setCookie(res, "sid", sid, {
+    const cookieName = (user.role || "user") === "admin" ? "sid_admin" : "sid";
+    setCookie(res, cookieName, sid, {
       httpOnly: true,
       secure: Boolean(process.env.VERCEL),
       sameSite: "Lax",
       path: "/",
       maxAge: 60 * 60 * 24 * 365
     });
-    if ((user.role || "user") === "admin") {
-      setCookie(res, "sid_admin", sid, {
-        httpOnly: true,
-        secure: Boolean(process.env.VERCEL),
-        sameSite: "Lax",
-        path: "/",
-        maxAge: 60 * 60 * 24 * 365
-      });
-    }
     ok(res, { user: { id: user.id, name: user.name, email: user.email, phone: user.phone || "", role: user.role || "user" } });
   });
 
