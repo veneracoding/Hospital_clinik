@@ -89,12 +89,17 @@ function requireAuth(db) {
 }
 
 function requireAdmin(db) {
-  const auth = requireAuth(db);
-  return (req, res, next) => {
-    auth(req, res, () => {
-      if (!req.user || req.user.role !== "admin") return fail(res, 403, "Admin access required");
-      next();
-    });
+  return async (req, res, next) => {
+    const sid = getCookie(req, "sid_admin") || getCookie(req, "sid");
+    if (!sid) return fail(res, 401, "Not authenticated");
+    const s = await db.getState();
+    const session = s.sessions.find((x) => x.id === sid);
+    if (!session) return fail(res, 401, "Not authenticated");
+    const user = s.users.find((u) => u.id === session.userId);
+    if (!user) return fail(res, 401, "Not authenticated");
+    if ((user.role || "user") !== "admin") return fail(res, 403, "Admin access required");
+    req.user = { id: user.id, name: user.name, email: user.email, role: user.role || "admin" };
+    next();
   };
 }
 
@@ -200,17 +205,29 @@ function apiRouter(db) {
       path: "/",
       maxAge: 60 * 60 * 24 * 365
     });
+    if ((user.role || "user") === "admin") {
+      setCookie(res, "sid_admin", sid, {
+        httpOnly: true,
+        secure: Boolean(process.env.VERCEL),
+        sameSite: "Lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 365
+      });
+    }
     ok(res, { user: { id: user.id, name: user.name, email: user.email, phone: user.phone || "", role: user.role || "user" } });
   });
 
   router.post("/auth/logout", async (req, res) => {
     const sid = getCookie(req, "sid");
-    if (sid) {
+    const sidAdmin = getCookie(req, "sid_admin");
+    const toRemove = new Set([sid, sidAdmin].filter(Boolean));
+    if (toRemove.size) {
       await db.update((s) => {
-        s.sessions = s.sessions.filter((x) => x.id !== sid);
+        s.sessions = s.sessions.filter((x) => !toRemove.has(x.id));
       });
     }
     clearCookie(res, "sid");
+    clearCookie(res, "sid_admin");
     ok(res, { loggedOut: true });
   });
 

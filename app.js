@@ -292,7 +292,7 @@ async function loadDoctorsSection() {
       const bioHtml = bio ? `<p class="doc-bio">${bio.length > 120 ? bio.slice(0, 120) + "..." : bio}</p>` : '';
       return `
         <div class="box">
-          <img src="${img}" alt="${name}">
+          <img src="${img}" alt="${name}" onerror="this.onerror=null;this.src='./img/doc-1.jpg';">
           <h3>${d.name || ''}</h3>
           <span>${specialty}</span>
           ${bioHtml}
