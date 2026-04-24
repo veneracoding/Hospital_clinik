@@ -208,7 +208,7 @@
     async function requireAdmin() {
       let me;
       try {
-        me = await fetchJson("/api/me");
+        me = await fetchJson("/api/admin/me");
       } catch (e) {
         window.location.href = "login.html?next=admin.html&admin=1";
         return null;

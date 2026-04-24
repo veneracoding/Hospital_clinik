@@ -92,7 +92,7 @@ function buildTimeSlots() {
 
 function requireAuth(db) {
   return async (req, res, next) => {
-    const sid = getCookie(req, "sid") || getCookie(req, "sid_admin");
+    const sid = getCookie(req, "sid");
     if (!sid) return fail(res, 401, "Not authenticated");
     const s = await db.getState();
     const session = s.sessions.find((x) => x.id === sid);
@@ -268,6 +268,10 @@ function apiRouter(db) {
   router.post("/admin/upload", requireAdmin(db), upload.single("photo"), async (req, res) => {
     if (!req.file) return fail(res, 400, "photo is required");
     ok(res, { url: `/uploads/${req.file.filename}` });
+  });
+
+  router.get("/admin/me", requireAdmin(db), async (req, res) => {
+    ok(res, { user: req.user });
   });
 
   router.get("/admin/doctors", requireAdmin(db), async (req, res) => {

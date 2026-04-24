@@ -70,6 +70,29 @@ function initAdminLinkVisibility() {
     .catch(() => {});
 }
 
+function initAuthLinkToggle() {
+  const loginLinks = Array.from(document.querySelectorAll('a[href="login.html"]'));
+  if (!loginLinks.length) return;
+
+  fetchJson("/api/me")
+    .then(() => {
+      for (const a of loginLinks) {
+        a.textContent = "chiqish";
+        a.href = "#logout";
+        a.addEventListener("click", async (e) => {
+          e.preventDefault();
+          try {
+            await fetchJson("/api/auth/logout", { method: "POST" });
+          } catch (_) {}
+          location.href = "login.html";
+        }, { once: true });
+      }
+    })
+    .catch(() => {
+      // keep as "kirish"
+    });
+}
+
 function initThemeToggle() {
   const root = document.documentElement;
   const btn = document.getElementById("themeToggle");
@@ -274,6 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
   requireLoginForSite().finally(() => {
     initThemeToggle();
     initAdminLinkVisibility();
+    initAuthLinkToggle();
     initBooking().catch(() => {});
     loadDoctorsSection().catch(() => {});
   });
