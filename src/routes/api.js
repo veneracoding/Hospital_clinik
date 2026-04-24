@@ -331,9 +331,44 @@ function apiRouter(db) {
       .map((a) => ({
         ...a,
         doctor: doctorsById.get(a.doctorId) ? { ...doctorsById.get(a.doctorId) } : null,
-        user: usersById.get(a.userId) ? { id: a.userId, name: usersById.get(a.userId).name, email: usersById.get(a.userId).email } : null
+        user: usersById.get(a.userId)
+          ? {
+              id: a.userId,
+              name: usersById.get(a.userId).name,
+              email: usersById.get(a.userId).email,
+              phone: usersById.get(a.userId).phone || "",
+              role: usersById.get(a.userId).role || "user"
+            }
+          : null
       }));
     ok(res, list);
+  });
+
+  router.get("/admin/users", requireAdmin(db), async (req, res) => {
+    const s = await db.getState();
+    const doctorsById = new Map(s.doctors.map((d) => [d.id, d]));
+    const apptsByUser = new Map();
+    for (const a of s.appointments) {
+      if (!apptsByUser.has(a.userId)) apptsByUser.set(a.userId, []);
+      apptsByUser.get(a.userId).push({
+        ...a,
+        doctor: doctorsById.get(a.doctorId) ? { ...doctorsById.get(a.doctorId) } : null
+      });
+    }
+
+    const users = [...s.users]
+      .map((u) => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        phone: u.phone || "",
+        role: u.role || "user",
+        createdAt: u.createdAt,
+        appointments: (apptsByUser.get(u.id) || []).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
+      }))
+      .sort((a, b) => (a.email || "").localeCompare(b.email || ""));
+
+    ok(res, users);
   });
 
   router.patch("/admin/appointments/:id", requireAdmin(db), async (req, res) => {

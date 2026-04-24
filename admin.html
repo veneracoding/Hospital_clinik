@@ -159,10 +159,12 @@
       <div class="tabs">
         <div class="tab active" data-tab="doctors"><i class="fa-solid fa-user-doctor"></i> Shifokorlar</div>
         <div class="tab" data-tab="appointments"><i class="fa-regular fa-calendar-check"></i> Yozuvlar</div>
+        <div class="tab" data-tab="users"><i class="fa-regular fa-user"></i> Foydalanuvchilar</div>
       </div>
 
       <div id="tab-doctors" class="grid"></div>
       <div id="tab-appointments" class="grid" style="display:none;"></div>
+      <div id="tab-users" class="grid" style="display:none;"></div>
     </div>
   </div>
 
@@ -182,12 +184,15 @@
   <script src="app.js"></script>
   <script>
     async function fetchJson(url, opts) {
-      const res = await fetch(url, { credentials: "include", ...(opts || {}) });
+      const res = await fetch(url, { cache: "no-store", credentials: "include", ...(opts || {}) });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json || !json.ok) {
         const msg = (json && json.error) ? json.error : ("So‘rov bajarilmadi (" + res.status + ")");
         const e = new Error(msg);
         e.status = res.status;
+        if (res.status === 401) {
+          window.location.href = "login.html?next=admin.html&admin=1";
+        }
         throw e;
       }
       return json.data;
@@ -570,11 +575,67 @@ async function loadAppointments() {
       }
     }
 
+    function userCard(u) {
+      const div = document.createElement("div");
+      div.className = "card";
+      const role = u.role || "user";
+      const phone = u.phone || "";
+      const count = (u.appointments || []).length;
+      div.innerHTML =
+        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">' +
+          '<div>' +
+            '<div style="font-size:1.9rem;font-weight:700;color:var(--black)">' + (u.name || "") + '</div>' +
+            '<div class="mini"><i class="fa-regular fa-envelope"></i> ' + (u.email || "") + '</div>' +
+            (phone ? '<div class="mini"><i class="fa-solid fa-phone"></i> ' + phone + '</div>' : '') +
+            '<div class="mini">role: ' + role + '</div>' +
+            '<div class="mini">id: ' + (u.id || "") + '</div>' +
+          '</div>' +
+          '<div class="pill pending" style="white-space:nowrap;">yozuvlar: ' + count + '</div>' +
+        '</div>' +
+        '<div style="margin-top:12px;">' +
+          (count ? '<div style="font-size:1.4rem;color:var(--muted);margin-bottom:6px;">Yozuvlar</div>' : '') +
+          (count ? '<div class="list"></div>' : '<div class="muted">Yozuvlar yo‘q.</div>') +
+        '</div>';
+
+      if (count) {
+        const list = div.querySelector(".list");
+        for (const a of u.appointments) {
+          const doc = a.doctor ? (a.doctor.name + " • " + a.doctor.specialty) : a.doctorId;
+          const item = document.createElement("div");
+          item.className = "apt-card";
+          item.style.margin = "10px 0 0";
+          item.innerHTML =
+            '<div class="apt-info">' +
+              '<div class="apt-doctor"><i class="fa-solid fa-user-doctor"></i> ' + doc + '</div>' +
+              '<div class="apt-time"><i class="fa-regular fa-calendar"></i> ' + a.date + ' &nbsp; <i class="fa-regular fa-clock"></i> ' + a.time + '</div>' +
+              (a.reason ? '<div class="apt-reason"><i class="fa-regular fa-comment"></i> ' + a.reason + '</div>' : '') +
+            '</div>' +
+            '<div class="apt-actions">' + pill(a.status) + '</div>';
+          list.appendChild(item);
+        }
+      }
+      return div;
+    }
+
+    async function loadUsers() {
+      const wrap = document.getElementById("tab-users");
+      wrap.innerHTML = '<div class="muted">Yuklanmoqda...</div>';
+      try {
+        const list = await fetchJson("/api/admin/users");
+        wrap.innerHTML = "";
+        for (const u of list) wrap.appendChild(userCard(u));
+        if (!list.length) wrap.innerHTML = '<div class="muted">Hali foydalanuvchilar yo‘q.</div>';
+      } catch (e) {
+        wrap.innerHTML = '<div class="muted">Xatolik: ' + (e.message || "Yuklanmadi") + '</div>';
+      }
+    }
+
     function setupTabs() {
       const tabs = [...document.querySelectorAll(".tab")];
       const views = {
         doctors: document.getElementById("tab-doctors"),
-        appointments: document.getElementById("tab-appointments")
+        appointments: document.getElementById("tab-appointments"),
+        users: document.getElementById("tab-users")
       };
       tabs.forEach(t => t.addEventListener("click", () => {
         tabs.forEach(x => x.classList.remove("active"));
@@ -582,7 +643,9 @@ async function loadAppointments() {
         const k = t.getAttribute("data-tab");
         views.doctors.style.display = (k === "doctors") ? "grid" : "none";
         views.appointments.style.display = (k === "appointments") ? "grid" : "none";
+        views.users.style.display = (k === "users") ? "grid" : "none";
         if (k === "appointments") loadAppointments();
+        if (k === "users") loadUsers();
       }));
     }
 
