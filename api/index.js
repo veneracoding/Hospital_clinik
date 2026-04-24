@@ -7,7 +7,7 @@ let dbReady = false;
 function ensureAppLoaded() {
   if (app) return app;
 
-  const { ensureDb, db } = require("../src/db");
+  const { ensureDb, db, getRedisClient } = require("../src/db");
   const { apiRouter } = require("../src/routes/api");
 
   const nextApp = express();
@@ -19,7 +19,24 @@ function ensureAppLoaded() {
     next();
   });
 
-  // Serve uploaded files from /tmp/uploads on Vercel
+  // Serve uploaded files. On Vercel prefer Redis-backed uploads.
+  nextApp.get("/uploads/:name", async (req, res, next) => {
+    try {
+      if (process.env.REDIS_URL) {
+        const redis = await getRedisClient();
+        const raw = await redis.get(`hospital_clinik:upload:${req.params.name}`);
+        if (raw) {
+          const obj = JSON.parse(raw);
+          const buf = Buffer.from(obj.data || "", "base64");
+          res.setHeader("Content-Type", obj.mime || "application/octet-stream");
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+          res.status(200).send(buf);
+          return;
+        }
+      }
+    } catch (_) {}
+    return next();
+  });
   nextApp.use("/uploads", express.static("/tmp/uploads"));
 
   // Mount API routes

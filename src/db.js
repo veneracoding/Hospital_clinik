@@ -244,5 +244,5 @@ async function ensureDb() {
   });
 }
 
-module.exports = { db, ensureDb, nowIso };
+module.exports = { db, ensureDb, nowIso, getRedisClient };
 

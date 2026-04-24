@@ -253,9 +253,10 @@ function apiRouter(db) {
   });
 
   // ---------- Admin ----------
-  const uploadBaseDir = process.env.VERCEL ? "/tmp/uploads" : path.join(process.cwd(), "uploads");
+  const isVercel = Boolean(process.env.VERCEL);
+  const uploadBaseDir = isVercel ? "/tmp/uploads" : path.join(process.cwd(), "uploads");
   const upload = multer({
-    storage: multer.diskStorage({
+    storage: isVercel ? multer.memoryStorage() : multer.diskStorage({
       destination: (req, file, cb) => cb(null, uploadBaseDir),
       filename: (req, file, cb) => {
         const ext = path.extname(file.originalname || "").slice(0, 10) || ".png";
@@ -267,6 +268,23 @@ function apiRouter(db) {
 
   router.post("/admin/upload", requireAdmin(db), upload.single("photo"), async (req, res) => {
     if (!req.file) return fail(res, 400, "photo is required");
+
+    // In Vercel, /tmp is not reliable across instances; store file in Redis if available
+    if (isVercel && req.file.buffer && process.env.REDIS_URL) {
+      const { getRedisClient } = require("../db");
+      const redis = await getRedisClient();
+      const ext = path.extname(req.file.originalname || "").slice(0, 10) || ".png";
+      const filename = `doc_${Date.now()}_${rid(8)}${ext}`;
+      const payload = JSON.stringify({
+        mime: req.file.mimetype || "application/octet-stream",
+        data: Buffer.from(req.file.buffer).toString("base64")
+      });
+      await redis.set(`hospital_clinik:upload:${filename}`, payload);
+      ok(res, { url: `/uploads/${filename}` });
+      return;
+    }
+
+    // Local (or fallback): disk storage
     ok(res, { url: `/uploads/${req.file.filename}` });
   });
 
