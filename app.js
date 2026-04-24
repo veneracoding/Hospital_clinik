@@ -14,7 +14,7 @@ window.onscroll=()=>{
 }
 
 async function fetchJson(url, opts) {
-  const res = await fetch(url, opts);
+  const res = await fetch(url, { cache: "no-store", credentials: "include", ...(opts || {}) });
   const json = await res.json().catch(() => null);
   if (!res.ok || !json || !json.ok) {
     const msg = (json && json.error) ? json.error : ("So‘rov bajarilmadi (" + res.status + ")");

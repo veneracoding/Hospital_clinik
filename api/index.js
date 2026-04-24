@@ -13,6 +13,11 @@ function ensureAppLoaded() {
   const nextApp = express();
   nextApp.use(express.json({ limit: "1mb" }));
   nextApp.use(express.urlencoded({ extended: true }));
+  nextApp.use((req, res, next) => {
+    // Prevent 304 caching issues for authenticated API calls
+    res.setHeader("Cache-Control", "no-store, max-age=0");
+    next();
+  });
 
   // Serve uploaded files from /tmp/uploads on Vercel
   nextApp.use("/uploads", express.static("/tmp/uploads"));
