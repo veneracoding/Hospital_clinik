@@ -25,6 +25,21 @@ async function fetchJson(url, opts) {
   return json.data;
 }
 
+function isAuthPage() {
+  const p = (location.pathname || "").toLowerCase();
+  return p.endsWith("/login.html") || p.endsWith("/register.html");
+}
+
+async function requireLoginForSite() {
+  if (isAuthPage()) return;
+  try {
+    await fetchJson("/api/me");
+  } catch (_) {
+    const next = location.pathname.split("/").pop() + location.search + location.hash;
+    location.href = "login.html?next=" + encodeURIComponent(next);
+  }
+}
+
 const themes = ["light", "dark", "coffee", "blue", "purple", "pink", "orange"];
 const themeIcons = {
   light: "fa-sun",
@@ -250,10 +265,12 @@ async function initBooking() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  initThemeToggle();
-  initAdminLinkVisibility();
-  initBooking().catch(() => {});
-  loadDoctorsSection().catch(() => {});
+  requireLoginForSite().finally(() => {
+    initThemeToggle();
+    initAdminLinkVisibility();
+    initBooking().catch(() => {});
+    loadDoctorsSection().catch(() => {});
+  });
 });
 
 async function loadDoctorsSection() {

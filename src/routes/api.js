@@ -198,7 +198,7 @@ function apiRouter(db) {
       secure: Boolean(process.env.VERCEL),
       sameSite: "Lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7
+      maxAge: 60 * 60 * 24 * 365
     });
     ok(res, { user: { id: user.id, name: user.name, email: user.email, phone: user.phone || "", role: user.role || "user" } });
   });

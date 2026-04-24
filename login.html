@@ -106,7 +106,7 @@
 
   <script>
     async function fetchJson(url, opts) {
-      const res = await fetch(url, Object.assign({ headers: { "Content-Type": "application/json" } }, opts));
+      const res = await fetch(url, Object.assign({ cache: "no-store", credentials: "include", headers: { "Content-Type": "application/json" } }, opts));
       const json = await res.json().catch(() => null);
       if (!res.ok || !json || !json.ok) {
         const msg = (json && json.error) ? json.error : ("So‘rov bajarilmadi (" + res.status + ")");
@@ -152,7 +152,7 @@
       try {
         const loginData = await fetchJson("/api/auth/login", {
           method: "POST",
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ email: email.toLowerCase(), password })
         });
         const next = getParam("next");
         if (next) {
