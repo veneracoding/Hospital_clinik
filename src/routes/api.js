@@ -50,6 +50,7 @@ function getCookie(req, name) {
 function setCookie(res, name, value, opts = {}) {
   const parts = [`${name}=${encodeURIComponent(value)}`];
   if (opts.httpOnly) parts.push("HttpOnly");
+  if (opts.secure) parts.push("Secure");
   if (opts.sameSite) parts.push(`SameSite=${opts.sameSite}`);
   if (opts.path) parts.push(`Path=${opts.path}`);
   if (opts.maxAge != null) parts.push(`Max-Age=${opts.maxAge}`);
@@ -192,7 +193,13 @@ function apiRouter(db) {
       st.sessions.push({ id: sid, userId: user.id, createdAt: nowIso() });
     });
 
-    setCookie(res, "sid", sid, { httpOnly: true, sameSite: "Lax", path: "/", maxAge: 60 * 60 * 24 * 7 });
+    setCookie(res, "sid", sid, {
+      httpOnly: true,
+      secure: Boolean(process.env.VERCEL),
+      sameSite: "Lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7
+    });
     ok(res, { user: { id: user.id, name: user.name, email: user.email, phone: user.phone || "", role: user.role || "user" } });
   });
 
