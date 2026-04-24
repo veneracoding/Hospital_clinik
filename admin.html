@@ -637,16 +637,32 @@ async function loadAppointments() {
         appointments: document.getElementById("tab-appointments"),
         users: document.getElementById("tab-users")
       };
-      tabs.forEach(t => t.addEventListener("click", () => {
-        tabs.forEach(x => x.classList.remove("active"));
-        t.classList.add("active");
-        const k = t.getAttribute("data-tab");
+      const activate = (k) => {
+        for (const x of tabs) x.classList.remove("active");
+        const t = tabs.find((x) => x.getAttribute("data-tab") === k) || tabs[0];
+        if (t) t.classList.add("active");
+        k = (t && t.getAttribute("data-tab")) || "doctors";
         views.doctors.style.display = (k === "doctors") ? "grid" : "none";
         views.appointments.style.display = (k === "appointments") ? "grid" : "none";
         views.users.style.display = (k === "users") ? "grid" : "none";
         if (k === "appointments") loadAppointments();
         if (k === "users") loadUsers();
+      };
+
+      tabs.forEach(t => t.addEventListener("click", () => {
+        tabs.forEach(x => x.classList.remove("active"));
+        t.classList.add("active");
+        const k = t.getAttribute("data-tab");
+        activate(k);
       }));
+
+      // allow deep-link via hash: #appointments or #users
+      const h = (location.hash || "").replace("#", "");
+      if (h === "appointments" || h === "users" || h === "doctors") {
+        activate(h);
+      } else {
+        activate("doctors");
+      }
     }
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
