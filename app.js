@@ -30,8 +30,14 @@ function isAuthPage() {
   return p.endsWith("/login.html") || p.endsWith("/register.html");
 }
 
+function isAdminPage() {
+  const p = (location.pathname || "").toLowerCase();
+  return p.endsWith("/admin.html");
+}
+
 async function requireLoginForSite() {
-  if (isAuthPage()) return;
+  // admin.html has its own auth gate (admin-only) and uses sid_admin cookie
+  if (isAuthPage() || isAdminPage()) return;
   try {
     await fetchJson("/api/me");
   } catch (_) {
