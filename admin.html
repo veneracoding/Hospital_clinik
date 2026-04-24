@@ -650,7 +650,8 @@ async function loadAppointments() {
     }
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
-      try { await fetchJson("/api/auth/logout", { method: "POST" }); } catch (e) {}
+      // Log out only from admin session (keep user session)
+      try { await fetchJson("/api/auth/logout?admin=1", { method: "POST" }); } catch (e) {}
       window.location.href = "index.html";
     });
 

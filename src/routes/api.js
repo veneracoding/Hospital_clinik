@@ -226,15 +226,20 @@ function apiRouter(db) {
   });
 
   router.post("/auth/logout", async (req, res) => {
+    const adminOnly = String(req.query && req.query.admin) === "1";
     const sid = getCookie(req, "sid");
     const sidAdmin = getCookie(req, "sid_admin");
-    const toRemove = new Set([sid, sidAdmin].filter(Boolean));
+
+    const toRemove = new Set(
+      adminOnly ? [sidAdmin].filter(Boolean) : [sid, sidAdmin].filter(Boolean)
+    );
     if (toRemove.size) {
       await db.update((s) => {
         s.sessions = s.sessions.filter((x) => !toRemove.has(x.id));
       });
     }
-    clearCookie(res, "sid");
+
+    if (!adminOnly) clearCookie(res, "sid");
     clearCookie(res, "sid_admin");
     ok(res, { loggedOut: true });
   });
