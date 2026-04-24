@@ -524,7 +524,7 @@ async function loadAppointments() {
       wrap.innerHTML = '<div class="muted">Yuklanmoqda...</div>';
       try {
         wrap.innerHTML = "";
-        const list = await fetchJson("/api/admin/appointments");
+        const list = await fetchJson("/api/admin/appointments?t=" + Date.now());
         for (const a of list) {
           const doc = a.doctor ? (a.doctor.name + " • " + a.doctor.specialty) : a.doctorId;
           const usr = a.user ? (a.user.name + " (" + a.user.email + ")") : a.userId;
@@ -621,7 +621,7 @@ async function loadAppointments() {
       const wrap = document.getElementById("tab-users");
       wrap.innerHTML = '<div class="muted">Yuklanmoqda...</div>';
       try {
-        const list = await fetchJson("/api/admin/users");
+        const list = await fetchJson("/api/admin/users?t=" + Date.now());
         wrap.innerHTML = "";
         for (const u of list) wrap.appendChild(userCard(u));
         if (!list.length) wrap.innerHTML = '<div class="muted">Hali foydalanuvchilar yo‘q.</div>';

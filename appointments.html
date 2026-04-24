@@ -102,7 +102,7 @@
       }
       document.getElementById("who").textContent = me.user.name + " (" + me.user.email + ")";
 
-      const list = await fetchJson("/api/appointments/mine");
+      const list = await fetchJson("/api/appointments/mine?t=" + Date.now());
       const wrap = document.getElementById("list");
       wrap.innerHTML = "";
 
