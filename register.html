@@ -124,6 +124,15 @@
       return json.data;
     }
 
+    async function fetchJsonRetry(url, opts) {
+      try {
+        return await fetchJson(url, opts);
+      } catch (_) {
+        await new Promise((r) => setTimeout(r, 150));
+        return await fetchJson(url, opts);
+      }
+    }
+
     document.getElementById("registerForm").addEventListener("submit", async function(e) {
       e.preventDefault();
       const errorMsg = document.getElementById("errorMsg");
@@ -151,6 +160,7 @@
           method: "POST",
           body: JSON.stringify({ email, password })
         });
+        await fetchJsonRetry("/api/me");
         const next = new URL(window.location.href).searchParams.get("next");
         window.location.href = next ? next : "appointments.html";
       } catch (err) {
