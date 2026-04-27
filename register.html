@@ -115,7 +115,7 @@
 
   <script>
     async function fetchJson(url, opts) {
-      const res = await fetch(url, Object.assign({ headers: { "Content-Type": "application/json" } }, opts));
+      const res = await fetch(url, Object.assign({ cache: "no-store", credentials: "include", headers: { "Content-Type": "application/json" } }, opts));
       const json = await res.json().catch(() => null);
       if (!res.ok || !json || !json.ok) {
         const msg = (json && json.error) ? json.error : ("So‘rov bajarilmadi (" + res.status + ")");
@@ -132,17 +132,27 @@
       okMsg.style.display = "none";
 
       try {
+        const name = document.getElementById("name").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+        const email = document.getElementById("email").value.trim().toLowerCase();
+        const password = document.getElementById("password").value;
+
         await fetchJson("/api/auth/register", {
           method: "POST",
           body: JSON.stringify({
-            name: document.getElementById("name").value.trim(),
-            phone: document.getElementById("phone").value.trim(),
-            email: document.getElementById("email").value.trim(),
-            password: document.getElementById("password").value
+            name,
+            phone,
+            email,
+            password
           })
         });
-        okMsg.style.display = "block";
-        this.reset();
+        // After registration, automatically sign in to avoid login redirects
+        await fetchJson("/api/auth/login", {
+          method: "POST",
+          body: JSON.stringify({ email, password })
+        });
+        const next = new URL(window.location.href).searchParams.get("next");
+        window.location.href = next ? next : "appointments.html";
       } catch (err) {
         errorMsg.textContent = "⚠️ " + (err && err.message ? err.message : "Ro‘yxatdan o‘tish amalga oshmadi");
         errorMsg.style.display = "block";

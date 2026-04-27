@@ -110,7 +110,13 @@
       document.getElementById("name").textContent = d ? d.name : "Shifokor";
       document.getElementById("spec").textContent = d ? d.specialty : "";
       const photo = document.getElementById("photo");
-      if (d && d.photo) photo.src = d.photo;
+      if (photo) {
+        photo.onerror = () => {
+          photo.onerror = null;
+          photo.src = "./img/doc-1.jpg";
+        };
+        if (d && d.photo) photo.src = d.photo;
+      }
 
       if (d && typeof d.bio === "string" && d.bio.trim()) {
         document.getElementById("bio").textContent = d.bio.trim();

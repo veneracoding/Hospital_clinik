@@ -193,7 +193,7 @@ function apiRouter(db) {
       s.users.push(createdUser);
     });
 
-    if (!createdUser) return fail(res, 409, "Email already registered");
+    if (!createdUser) return fail(res, 409, "Email allaqachon ro‘yxatdan o‘tgan");
     ok(res, { user: { id: createdUser.id, name: createdUser.name, email: createdUser.email, phone: createdUser.phone || "" } });
   });
 

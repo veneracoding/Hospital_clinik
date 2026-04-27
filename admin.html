@@ -229,7 +229,7 @@
       div.innerHTML =
         '<div class="doctor-head">' +
           '<div class="doc-left">' +
-            '<img class="photo" src="' + (d.photo || '') + '" alt="photo" />' +
+            '<img class="photo" src="' + (d.photo || '') + '" alt="photo" onerror="this.onerror=null;this.src=\'./img/doc-1.jpg\';" />' +
             '<div>' +
               '<div style="font-size:1.9rem;font-weight:700;color:var(--black)">' + (d.name || '') + '</div>' +
               '<div class="mini">' + (d.specialty || '') + '</div>' +
