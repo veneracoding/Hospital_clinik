@@ -25,6 +25,19 @@ async function fetchJson(url, opts) {
   return json.data;
 }
 
+async function fetchJsonRetry(url, opts) {
+  try {
+    return await fetchJson(url, opts);
+  } catch (e) {
+    // Right after login redirect, cookie can be set but first request races; retry once.
+    if (e && e.status === 401 && (url === "/api/me" || url.startsWith("/api/me?"))) {
+      await new Promise((r) => setTimeout(r, 150));
+      return await fetchJson(url, opts);
+    }
+    throw e;
+  }
+}
+
 function isAuthPage() {
   const p = (location.pathname || "").toLowerCase();
   return p.endsWith("/login.html") || p.endsWith("/register.html");
@@ -39,7 +52,7 @@ async function requireLoginForSite() {
   // admin.html has its own auth gate (admin-only) and uses sid_admin cookie
   if (isAuthPage() || isAdminPage()) return;
   try {
-    await fetchJson("/api/me");
+    await fetchJsonRetry("/api/me");
   } catch (_) {
     const next = location.pathname.split("/").pop() + location.search + location.hash;
     location.href = "login.html?next=" + encodeURIComponent(next);
@@ -61,7 +74,7 @@ function initAdminLinkVisibility() {
   const adminLinks = Array.from(document.querySelectorAll('a[href="admin.html"]'));
   for (const a of adminLinks) a.style.display = "none";
 
-  fetchJson("/api/me")
+  fetchJsonRetry("/api/me")
     .then((me) => {
       if (me && me.user && me.user.role === "admin") {
         for (const a of adminLinks) a.style.display = "";
@@ -74,7 +87,7 @@ function initAuthLinkToggle() {
   const loginLinks = Array.from(document.querySelectorAll('a[href="login.html"]'));
   if (!loginLinks.length) return;
 
-  fetchJson("/api/me")
+  fetchJsonRetry("/api/me")
     .then(() => {
       for (const a of loginLinks) {
         a.textContent = "chiqish";
