@@ -92,7 +92,8 @@ function buildTimeSlots() {
 
 function requireAuth(db) {
   return async (req, res, next) => {
-    const sid = getCookie(req, "sid");
+    // Allow normal site access with either user session (sid) or admin session (sid_admin)
+    const sid = getCookie(req, "sid") || getCookie(req, "sid_admin");
     if (!sid) return fail(res, 401, "Not authenticated");
     const s = await db.getState();
     const session = s.sessions.find((x) => x.id === sid);
