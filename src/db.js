@@ -130,8 +130,8 @@ function createDb() {
   let state = null;
   let saving = Promise.resolve();
 
-  async function load() {
-    if (state) return state;
+  async function load(opts = {}) {
+    const force = Boolean(opts.force);
     if (canUseRedisUrl()) {
       const redis = await getRedisClient();
       const raw = await redis.get(KV_KEY);
@@ -152,6 +152,7 @@ function createDb() {
       return state;
     }
 
+    if (!force && state) return state;
     const loaded = await readJsonSafe(DB_PATH);
     state = loaded ?? defaultSeed();
     return state;
@@ -178,11 +179,12 @@ function createDb() {
   }
 
   async function getState() {
-    return await load();
+    // On serverless (Redis/KV) avoid stale in-memory state across instances.
+    return await load({ force: canUseRedisUrl() || canUseVercelKv() });
   }
 
   async function update(mutator) {
-    const s = await load();
+    const s = await load({ force: canUseRedisUrl() || canUseVercelKv() });
     mutator(s);
     await save();
     return s;
