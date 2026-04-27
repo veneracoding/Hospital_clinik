@@ -424,6 +424,20 @@ function apiRouter(db) {
     ok(res, users);
   });
 
+  // Danger zone: wipe dynamic data (appointments/users/sessions)
+  router.post("/admin/wipe", requireAdmin(db), async (req, res) => {
+    await db.update((s) => {
+      // keep doctors as-is
+      s.appointments = [];
+      s.contactMessages = [];
+      // keep admins only
+      s.users = (s.users || []).filter((u) => (u.role || "user") === "admin");
+      // remove all sessions (forces fresh login)
+      s.sessions = [];
+    });
+    ok(res, { wiped: true });
+  });
+
   router.patch("/admin/appointments/:id", requireAdmin(db), async (req, res) => {
     const id = req.params.id;
     const { status } = req.body || {};
